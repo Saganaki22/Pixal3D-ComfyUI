@@ -52,4 +52,5 @@
 #   naf_mode=fallback_if_missing
 #
 # Full wheel notes:
+#   docs/linux_wsl_cuda.md
 #   docs/windows_wheels.md

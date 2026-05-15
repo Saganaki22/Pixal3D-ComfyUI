@@ -30,7 +30,7 @@
 
 # Pixal3D-ComfyUI 中文说明
 
-[English README](README.md) | [兼容性矩阵](docs/compatibility_matrix.md) | [便携版/独立版安装](docs/portable_standalone_install.md) | [Windows 轮子指南](docs/windows_wheels.md) | [故障排查](docs/troubleshooting.md)
+[English README](README.md) | [兼容性矩阵](docs/compatibility_matrix.md) | [便携版/独立版安装](docs/portable_standalone_install.md) | [Linux/WSL CUDA 指南](docs/linux_wsl_cuda.md) | [Windows 轮子指南](docs/windows_wheels.md) | [故障排查](docs/troubleshooting.md)
 
 Pixal3D-ComfyUI 是 TencentARC Pixal3D 的 ComfyUI 节点封装，用于从单张图片生成带贴图的 3D 模型，并导出 `.glb` 文件。节点支持 FlashAttention 2/3 选择、ComfyUI DynamicVRAM/Aimdo 管理、原生 ComfyUI MoGe 权重路径，以及 Windows CUDA 扩展轮子的手动安装流程。
 
@@ -63,7 +63,7 @@ uv pip install .
 
 本节点包含一个保守的 `install.py`，用于 ComfyUI Manager、Windows portable、普通 venv 和 Linux venv。默认只安装 runtime 依赖并打印环境检查，不会更改 PyTorch，也不会自动安装 CUDA 轮子，除非你显式开启已知精确匹配的轮子安装。
 
-`requirements.txt` 只包含安全的 runtime 依赖。它故意不包含 `torch`、`torchvision`、`flash-attn`、`triton`、`flex_gemm`、`cumesh`、`o_voxel`、`drtk`、`nvdiffrast`。这些是二进制/CUDA 依赖，必须根据你的环境手动选择轮子。参考 [requirements-cuda-manual.txt](requirements-cuda-manual.txt)、[便携版/独立版安装](docs/portable_standalone_install.md) 和 [Windows 轮子指南](docs/windows_wheels.md)。
+`requirements.txt` 只包含安全的 runtime 依赖。它故意不包含 `torch`、`torchvision`、`flash-attn`、`triton`、`flex_gemm`、`cumesh`、`o_voxel`、`drtk`、`nvdiffrast`。这些是二进制/CUDA 依赖，必须根据你的环境手动选择轮子或源码构建。参考 [requirements-cuda-manual.txt](requirements-cuda-manual.txt)、[便携版/独立版安装](docs/portable_standalone_install.md)、[Linux/WSL CUDA 指南](docs/linux_wsl_cuda.md) 和 [Windows 轮子指南](docs/windows_wheels.md)。
 
 普通 `natten==0.21.6` 会作为基础依赖安装，和一些 Pixal3D-D 封装保持一致。但这不等于 strict NAF 可用。只有 `natten.HAS_LIBNATTEN == True` 时，才是真正带 CUDA libnatten 的 NAF 路径。
 
@@ -71,8 +71,8 @@ uv pip install .
 
 | 项目 | 要求 |
 |------|------|
-| 显存 (VRAM) | **20–32 GB**（`1536_cascade` 约需 32 GB；`1024_cascade` 配合 `native_low_vram` 可能适合 20 GB 显卡） |
-| 内存 (RAM) | **最低 40 GB**（Pixal3D 在传到 GPU 前会在 CPU 侧暂存大量张量） |
+| 显存 (VRAM) | **推荐 20–32 GB**（`1536_cascade` 约需 32 GB；`native_low_vram` 在较小流程中可用到约 4–8 GB 显存） |
+| 内存 (RAM) | **native low-VRAM 推荐 40–50 GB**（Pixal3D 在传到 GPU 前会在 CPU 侧暂存大量张量） |
 
 ## 平台现实情况
 
@@ -141,6 +141,20 @@ MoGe 下载地址：[Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe)。
 | Pixal3D Export GLB | `texture_size` | `4096` |
 | Pixal3D Export GLB | `remesh` | 默认 `true`，节点会按设置传给 o_voxel；如果网格碎裂可改为 `false` |
 
+### Pixal3D Camera Control
+
+这个节点用于手动相机模式，只输出一个打包后的 ComfyUI 相机值：
+
+| 输出 | 连接到 |
+|------|--------|
+| `manual_fov` | 单线连接到 `Pixal3D Image To 3D.manual_fov` |
+
+可选的 `image` 输入只用于相机控件预览，不会输出图片。请把同一个 `Load Image` 直接连接到 `Pixal3D Image To 3D.image`。
+
+这个节点只在 `Pixal3D Image To 3D.camera_mode=manual` 时生效。把 `manual_fov` 连接到 `Pixal3D Image To 3D.manual_fov` 后，在 manual 模式下 `Pixal3D Image To 3D` 上的 `manual_camera_angle_x`、`manual_distance`、`mesh_scale` 三个普通输入会被忽略，改用 Camera Control 里的值。如果 `camera_mode=moge`，连接的 `manual_fov` 会被忽略，仍然使用 MoGe 自动估计相机。
+
+相机控件有 Scene 视图和 POV 视图，POV 使用的就是传给 Pixal3D 的同一组水平 FOV、distance 和 mesh scale。水平 FOV 会转换成弧度给 `manual_camera_angle_x`，distance/scale 会原样传入。
+
 <details>
 <summary>NAF 和 NATTEN</summary>
 
@@ -199,7 +213,20 @@ Pixal3D Export GLB glb_path
 
 如果切换 `vram_mode`、`attention_backend` 或其他 Model Loader 设置，新版节点会卸载旧的 Pixal3D cache handle。ComfyUI 原生 unload 主要释放 VRAM；如果想立刻释放 Pixal3D 的 CPU RAM，请运行 **Pixal3D Unload Model** 节点，或重启 ComfyUI。
 
-`native_low_vram` 模式会尽量分阶段移动模型：RMBG 只在背景预处理时上 GPU，MoGe 只在相机估计时上 GPU，之后都会回到 CPU；Pixal3D 主流程则按上游 low-vram 逻辑逐个移动 flow/decoder 模块。
+`native_low_vram` 模式会尽量分阶段移动模型：小流程可能只需要约 4–8 GB 显存，但需要大量系统内存，建议准备 40–50 GB RAM，速度也会更慢。RMBG 只在背景预处理时上 GPU，MoGe 只在相机估计时上 GPU，之后都会回到 CPU；Pixal3D 主流程则按上游 low-vram 逻辑逐个移动 flow/decoder 模块。
+
+低显存推荐设置：
+
+| 节点 | 设置 |
+|------|------|
+| Pixal3D Model Loader | `vram_mode=native_low_vram` |
+| Pixal3D Model Loader | `load_moge=false` |
+| Pixal3D Model Loader | `load_rembg=false` |
+| Pixal3D Image To 3D | `camera_mode=manual` |
+| Pixal3D Image To 3D | 透明 PNG/WebP 输入用 `background_mode=keep_alpha` |
+| Pixal3D Camera Control | 把 `manual_fov` 连接到 `Pixal3D Image To 3D.manual_fov` |
+
+这条路径建议使用带透明背景的 PNG 或 WebP，这样不用加载 RMBG；相机则用 **Pixal3D Camera Control**，不要加载 MoGe。
 
 </details>
 

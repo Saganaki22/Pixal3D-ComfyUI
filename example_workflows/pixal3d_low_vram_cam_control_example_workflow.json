@@ -1,0 +1,563 @@
+{
+  "id": "251e40f3-4903-4cbf-bb06-4f9332e2f8f9",
+  "revision": 0,
+  "last_node_id": 35,
+  "last_link_id": 41,
+  "nodes": [
+    {
+      "id": 7,
+      "type": "Preview3D",
+      "pos": [
+        939.7812871443941,
+        9165.339966659087
+      ],
+      "size": [
+        400,
+        550
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model_file",
+          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 16
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.0",
+        "Node name for S&R": "Preview3D",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 75,
+          "state": {
+            "position": {
+              "x": 1.1512878230360597,
+              "y": 2.595285934401332,
+              "z": -4.419843111441399
+            },
+            "target": {
+              "x": 0,
+              "y": 2.5,
+              "z": 0
+            },
+            "zoom": 1,
+            "cameraType": "perspective"
+          }
+        },
+        "Light Config": {
+          "intensity": 3.5
+        },
+        "Last Time Model File": "C:/Users/drbaph/Documents/ComfyUI/output/pixal3d_20260515_222609.glb",
+        "Resource Folder": "Users/drbaph/Documents/ComfyUI/output",
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled"
+        },
+        "Model Config": {
+          "upDirection": "original",
+          "materialMode": "normal",
+          "showSkeleton": false
+        }
+      },
+      "widgets_values": [
+        "C:/Users/drbaph/Documents/ComfyUI/output/pixal3d_20260515_222609.glb",
+        ""
+      ]
+    },
+    {
+      "id": 9,
+      "type": "Pixal3DEnvironmentCheck",
+      "pos": [
+        1376.8804941233082,
+        9074.18138586431
+      ],
+      "size": [
+        357.66649474888925,
+        26
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "pixal3d-comfyui",
+        "ver": "0.1.2",
+        "Node name for S&R": "Pixal3DEnvironmentCheck",
+        "aux_id": "Saganaki22/Pixal3D-ComfyUI"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 16,
+      "type": "ShowText|pysssss",
+      "pos": [
+        622.845823504336,
+        9464.307505123992
+      ],
+      "size": [
+        304.53226841629885,
+        243.61190654995335
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "C:\\Users\\drbaph\\Documents\\ComfyUI\\output\\pixal3d_20260515_222609.glb"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "Pixal3DExportGLB",
+      "pos": [
+        942.5745141376799,
+        8994.403324355018
+      ],
+      "size": [
+        332.03514257783263,
+        130
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixal3d_result",
+          "type": "PIXAL3D_RESULT",
+          "link": 34
+        }
+      ],
+      "outputs": [
+        {
+          "name": "glb_path",
+          "type": "STRING",
+          "links": [
+            16,
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "pixal3d-comfyui",
+        "ver": "0.1.2",
+        "Node name for S&R": "Pixal3DExportGLB",
+        "aux_id": "Saganaki22/Pixal3D-ComfyUI"
+      },
+      "widgets_values": [
+        1000000,
+        2048,
+        true,
+        "pixal3d"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "ShowText|pysssss",
+      "pos": [
+        1376.8804941233082,
+        9144.18138586431
+      ],
+      "size": [
+        358.3053625782586,
+        504.6546816451155
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "Pixal3D-ComfyUI environment check\n\nComfyUI models/Pixal3D: C:\\Users\\drbaph\\Documents\\ComfyUI\\models\\Pixal3D\nComfyUI models/moge: C:\\Users\\drbaph\\Documents\\ComfyUI\\models\\moge\nNodepack path: C:\\Users\\drbaph\\Documents\\ComfyUI\\custom_nodes\\Pixal3D-ComfyUI\n\nPython: 3.12.10\nPyTorch: 2.10.0+cu130\ntorch.version.cuda: 13.0\ntorch.cuda.is_available: True\nGPU: NVIDIA GeForce RTX 5090\nCUDA capability: 12.0\nBlackwell/sm_120 class: True\n\nRequired CUDA/Pixal3D modules:\n- flex_gemm: OK via flex_gemm_ap (import ok)\n- cumesh: OK via cumesh_vb (import ok)\n- o_voxel: OK via o_voxel_vb_ap (import ok)\n- drtk: OK via drtk (0.1.0)\n\nAttention modules, need at least one:\n- flash_attn: OK (2.8.3)\n- flash_attn_interface: MISSING (ModuleNotFoundError: No module named 'flash_attn_interface')\n\nOptional modules:\n- triton: OK (3.6.0)\n- nvdiffrast.torch: not found (ModuleNotFoundError: No module named 'nvdiffrast')\n- nvdiffrec_render: not found (ModuleNotFoundError: No module named 'nvdiffrec_render')\n\nNAF / NATTEN:\n- natten: OK (0.21.6)\n- natten.HAS_LIBNATTEN: False\n\nAttention auto mode would use: flash_attn_2\nResult: required imports passed. Pixal3D can try to load the model."
+      ]
+    },
+    {
+      "id": 31,
+      "type": "Pixal3DImageTo3D",
+      "pos": [
+        621.8326627355996,
+        8992.103995453575
+      ],
+      "size": [
+        301.61328125,
+        434
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "PIXAL3D_MODEL",
+          "link": 32
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 33
+        },
+        {
+          "name": "manual_fov",
+          "shape": 7,
+          "type": "PIXAL3D_CAMERA",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pixal3d_result",
+          "type": "PIXAL3D_RESULT",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "Pixal3D-ComfyUI",
+        "ver": "52dd76088d140f6343ba2a79ac95a9c7e8694a5e",
+        "Node name for S&R": "Pixal3DImageTo3D"
+      },
+      "widgets_values": [
+        964313354111086,
+        "randomize",
+        "1024_cascade",
+        "auto_remove",
+        "manual",
+        0.857556,
+        2,
+        1,
+        0,
+        512,
+        12,
+        7.5,
+        1,
+        49152,
+        false
+      ]
+    },
+    {
+      "id": 15,
+      "type": "LoadImage",
+      "pos": [
+        321.9993427573127,
+        9340.014633303583
+      ],
+      "size": [
+        284.6234320840681,
+        371.47373708244777
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            33,
+            40
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "whole.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "MarkdownNote",
+      "pos": [
+        -35.436862129461794,
+        9038.821018942408
+      ],
+      "size": [
+        329.751092857455,
+        619.5997377995172
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Pixal3D-ComfyUI Workflow\n\n  **Repo:** [Saganaki22/Pixal3D-ComfyUI](https://github.com/Saganaki22/Pixal3D-ComfyUI)\n\n  ## Models\n\n  - **Pixal3D:** [TencentARC/Pixal3D](https://huggingface.co/TencentARC/Pixal3D) →\n  `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/`\n  - **MoGe:** [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe) →\n  `ComfyUI/models/moge/moge_1_vitl_fp16.safetensors` + `moge_2_vitl_normal_fp16.safetensors`\n  - **RMBG-2.0:** [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) (gated) →\n  `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` <br> (Request access first)\n\n  ## Hardware\n\n  - VRAM: **20–32 GB** (1536_cascade ~32 GB, 1024_cascade may fit ~20 GB with native_low_vram)\n  - System RAM: **40 GB minimum**\n\n  ## Troubleshooting\n\n  If something goes wrong, **run Pixal3D Environment Check first** and paste the log along with the full error message\n  when opening an issue.\n\n  **Issues:** [Saganaki22/Pixal3D-ComfyUI/issues](https://github.com/Saganaki22/Pixal3D-ComfyUI/issues)\n\n  ### How to report an issue\n\n  1. Run **Pixal3D Environment Check** and copy the full output\n  2. Reproduce the error and copy the traceback/error message from the ComfyUI terminal\n  3. Include your hardware: GPU model, VRAM, system RAM\n  4. Include your stack: Python version, PyTorch version, CUDA version\n  5. Open a new issue at [Saganaki22/Pixal3D-ComfyUI/issues](https://github.com/Saganaki22/Pixal3D-ComfyUI/issues) with:\n     - A clear title describing the problem\n     - The Environment Check log\n     - The full error message / traceback\n     - Any steps you already tried"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 35,
+      "type": "Pixal3DCameraControl",
+      "pos": [
+        320.37960256708834,
+        9780.870496082864
+      ],
+      "size": [
+        430,
+        560
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "manual_fov",
+          "type": "PIXAL3D_CAMERA",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "Pixal3D-ComfyUI",
+        "ver": "333190b03ad5519be1718e2004bdcf20b119404f",
+        "Node name for S&R": "Pixal3DCameraControl"
+      },
+      "widgets_values": [
+        38.8,
+        2.42,
+        1,
+        ""
+      ]
+    },
+    {
+      "id": 23,
+      "type": "Pixal3DModelLoader",
+      "pos": [
+        323.2659273068882,
+        8993.21160025946
+      ],
+      "size": [
+        281.9140625,
+        298
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "PIXAL3D_MODEL",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "pixal3d-comfyui",
+        "ver": "0.1.2",
+        "Node name for S&R": "Pixal3DModelLoader",
+        "aux_id": "Saganaki22/Pixal3D-ComfyUI"
+      },
+      "widgets_values": [
+        "TencentARC/Pixal3D",
+        "https://huggingface.co",
+        "auto",
+        "native_low_vram",
+        false,
+        false,
+        true,
+        "fallback_if_missing",
+        "upstream",
+        false,
+        false
+      ]
+    }
+  ],
+  "links": [
+    [
+      6,
+      9,
+      0,
+      10,
+      0,
+      "STRING"
+    ],
+    [
+      16,
+      17,
+      0,
+      7,
+      2,
+      "STRING"
+    ],
+    [
+      17,
+      17,
+      0,
+      16,
+      0,
+      "STRING"
+    ],
+    [
+      32,
+      23,
+      0,
+      31,
+      0,
+      "PIXAL3D_MODEL"
+    ],
+    [
+      33,
+      15,
+      0,
+      31,
+      1,
+      "IMAGE"
+    ],
+    [
+      34,
+      31,
+      0,
+      17,
+      0,
+      "PIXAL3D_RESULT"
+    ],
+    [
+      40,
+      15,
+      0,
+      35,
+      0,
+      "IMAGE"
+    ],
+    [
+      41,
+      35,
+      0,
+      31,
+      2,
+      "PIXAL3D_CAMERA"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Environment Check",
+      "bounding": [
+        1365.9681573430119,
+        8993.234023115614,
+        383.77910485393886,
+        678.3739763008089
+      ],
+      "color": "#8A8",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Image-to-3D",
+      "bounding": [
+        311.9993427573127,
+        8922.103995453575,
+        1037.7819443870817,
+        803.2359712055113
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.598950000000001,
+      "offset": [
+        736.7688659670484,
+        -8813.852701857893
+      ]
+    },
+    "frontendVersion": "1.43.18",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

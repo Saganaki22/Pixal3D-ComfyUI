@@ -61,6 +61,7 @@ Run **Pixal3D Environment Check** in ComfyUI first. A production-ready local ins
 Manual wheel notes live in:
 
 - [requirements-cuda-manual.txt](../requirements-cuda-manual.txt)
+- [Linux / WSL CUDA Requirements](linux_wsl_cuda.md)
 - [Windows wheel guide](windows_wheels.md)
 - [Compatibility matrix](compatibility_matrix.md)
 
@@ -356,7 +357,20 @@ Pixal3D loads checkpoints through CPU RAM first, then moves modules to GPU when 
 
 Use `vram_mode=dynamic_vram` first on a 32GB card. Pixal3D-ComfyUI builds standard Pixal3D layers with Comfy/Aimdo-aware ops where possible, then wraps the pipeline in ComfyUI model management. Pixal3D is still not a fully Comfy-native model, so custom sparse modules and temporary tensors can still force-load or spike VRAM.
 
-If Comfy logs a large `Force pre-loaded` value or a 1536 run OOMs late in decode, switch to `vram_mode=native_low_vram`. That mode bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU one at a time and back to CPU afterwards. RMBG is staged only for background removal, MoGe is staged only for camera estimation, and Pixal3D's flow/decoder modules are staged by the upstream low-VRAM pipeline.
+If Comfy logs a large `Force pre-loaded` value or a 1536 run OOMs late in decode, switch to `vram_mode=native_low_vram`. That mode can run smaller workflows in low VRAM ranges such as 4-8 GB VRAM, but it trades that for much higher host memory use: plan for 40-50 GB system RAM and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU one at a time and back to CPU afterwards. RMBG is staged only for background removal, MoGe is staged only for camera estimation, and Pixal3D's flow/decoder modules are staged by the upstream low-VRAM pipeline.
+
+Lowest-VRAM recipe:
+
+```text
+Pixal3D Model Loader vram_mode=native_low_vram
+Pixal3D Model Loader load_moge=false
+Pixal3D Model Loader load_rembg=false
+Pixal3D Image To 3D camera_mode=manual
+Pixal3D Image To 3D background_mode=keep_alpha
+Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
+```
+
+Use a transparent-background PNG or WebP for this path. That avoids the RMBG helper model, and Camera Control avoids loading MoGe. The Camera Control node only applies in manual camera mode; when its `manual_fov` output is connected, it overrides the scalar `manual_camera_angle_x`, `manual_distance`, and `mesh_scale` inputs on `Pixal3D Image To 3D`.
 
 A `1536_cascade` run with high token counts can still exceed 32GB VRAM during decode because temporary tensors, sparse latents, decoded voxels, xatlas data, and GLB/preview data are separate from model weights.
 

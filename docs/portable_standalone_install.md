@@ -95,7 +95,9 @@ Package-style dependency install from the node folder:
 uv pip install --python ./venv/bin/python .
 ```
 
-Linux generally has an easier path for NATTEN/libnatten because upstream NATTEN publishes wheel commands for Linux/WSL NVIDIA users. You still need matching PyTorch/CUDA wheels for FlashAttention and the Pixal3D CUDA extensions.
+Linux generally has an easier path for NATTEN/libnatten because upstream NATTEN publishes wheel commands for Linux/WSL NVIDIA users. You still need matching PyTorch/CUDA wheels or local source builds for FlashAttention and the Pixal3D CUDA extensions.
+
+For the full manual Linux/WSL install path, including `flash-attn`, `flex_gemm`, `cumesh`, `o_voxel`, `drtk`, optional `nvdiffrast`/`nvdiffrec_render`, and verification commands, see [Linux / WSL CUDA Requirements](linux_wsl_cuda.md).
 
 Install official NATTEN+libnatten when the detected Linux/WSL stack is in the upstream wheel map:
 

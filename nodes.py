@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 
 from .pixal3d_comfy import (
@@ -38,9 +39,14 @@ TOOLTIPS = {
     "seed": "Random seed for all Pixal3D sampling stages.",
     "pipeline_type": "1024_cascade is the normal path. 1536_cascade can improve detail but needs more VRAM and may lower resolution if token count is too high.",
     "background_mode": "auto_remove uses Pixal3D/rembg unless alpha exists. keep_alpha prefers alpha. none skips background removal.",
-    "camera_mode": "moge estimates camera/FOV from the image. manual uses the camera_angle_x and distance fields.",
+    "camera_mode": "moge estimates camera/FOV from the image. manual uses manual_camera_angle_x, manual_distance, and mesh_scale unless a Pixal3D Camera Control manual_fov input is connected.",
     "manual_camera_angle_x": "Horizontal field of view in radians for manual camera mode.",
     "manual_distance": "Camera distance for manual camera mode.",
+    "camera_fov_degrees": "Horizontal field of view in degrees. The camera helper converts this to manual_camera_angle_x radians.",
+    "camera_distance": "Camera distance for Pixal3D manual camera mode.",
+    "camera_passthrough_image": "Optional preview image for the camera widget. This node does not output an image; connect Load Image directly to Pixal3D Image To 3D.",
+    "manual_fov": "Bundled manual camera values from Pixal3D Camera Control. Only used when camera_mode=manual. When connected, it overrides manual_camera_angle_x, manual_distance, and mesh_scale. Ignored when camera_mode=moge.",
+    "camera_info": "Readable summary of the manual camera values produced by the camera helper.",
     "mesh_scale": "Scale used for camera fitting. Usually keep 1.0.",
     "extend_pixel": "Offsets the camera fitting target. Useful if MoGe framing is slightly too tight or loose.",
     "camera_resolution": "Resolution used for MoGe camera fitting math. 512 matches upstream defaults.",
@@ -287,6 +293,9 @@ class Pixal3DImageTo3D:
                 "max_num_tokens": ("INT", {"default": 49152, "min": 4096, "max": 200000, "step": 1024, "tooltip": TOOLTIPS["max_num_tokens"]}),
                 "force_offload": ("BOOLEAN", {"default": False, "tooltip": TOOLTIPS["force_offload"]}),
             },
+            "optional": {
+                "manual_fov": ("PIXAL3D_CAMERA", {"tooltip": TOOLTIPS["manual_fov"]}),
+            },
             "hidden": {"unique_id": "UNIQUE_ID"},
         }
 
@@ -314,7 +323,12 @@ class Pixal3DImageTo3D:
         max_num_tokens,
         force_offload,
         unique_id=None,
+        manual_fov=None,
     ):
+        if camera_mode == "manual" and isinstance(manual_fov, dict):
+            manual_camera_angle_x = manual_fov.get("manual_camera_angle_x", manual_camera_angle_x)
+            manual_distance = manual_fov.get("manual_distance", manual_distance)
+            mesh_scale = manual_fov.get("mesh_scale", mesh_scale)
         pil_image = tensor_to_pil(image)
         result = run_pixal3d(
             model,
@@ -336,6 +350,46 @@ class Pixal3DImageTo3D:
             node_id=str(unique_id) if unique_id is not None else None,
         )
         return (result,)
+
+
+class Pixal3DCameraControl:
+    DESCRIPTION = "Interactive manual camera helper. Outputs one bundled manual_fov value for Pixal3D Image To 3D."
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "fov_degrees": ("FLOAT", {"default": 49.134, "min": 5.0, "max": 140.0, "step": 0.1, "tooltip": TOOLTIPS["camera_fov_degrees"]}),
+                "distance": ("FLOAT", {"default": 2.0, "min": 0.1, "max": 20.0, "step": 0.01, "tooltip": TOOLTIPS["camera_distance"]}),
+                "mesh_scale": ("FLOAT", {"default": 1.0, "min": 0.05, "max": 10.0, "step": 0.05, "tooltip": TOOLTIPS["mesh_scale"]}),
+            },
+            "optional": {
+                "image": ("IMAGE", {"tooltip": TOOLTIPS["camera_passthrough_image"]}),
+            },
+        }
+
+    RETURN_TYPES = ("PIXAL3D_CAMERA",)
+    RETURN_NAMES = ("manual_fov",)
+    FUNCTION = "camera"
+    CATEGORY = "Pixal3D"
+
+    def camera(self, fov_degrees, distance, mesh_scale, image=None):
+        fov_degrees = max(5.0, min(140.0, float(fov_degrees)))
+        distance = max(0.1, float(distance))
+        mesh_scale = max(0.05, float(mesh_scale))
+        camera_angle_x = math.radians(fov_degrees)
+        info = (
+            f"manual camera: manual_camera_angle_x={camera_angle_x:.6f} rad "
+            f"({fov_degrees:.3f} deg), manual_distance={distance:.3f}, mesh_scale={mesh_scale:.3f}"
+        )
+        manual_fov = {
+            "fov_degrees": fov_degrees,
+            "manual_camera_angle_x": camera_angle_x,
+            "manual_distance": distance,
+            "mesh_scale": mesh_scale,
+            "camera_info": info,
+        }
+        return (manual_fov,)
 
 
 class Pixal3DExportGLB:
@@ -396,6 +450,7 @@ class Pixal3DUnloadModel:
 NODE_CLASS_MAPPINGS = {
     "Pixal3DEnvironmentCheck": Pixal3DEnvironmentCheck,
     "Pixal3DModelLoader": Pixal3DModelLoader,
+    "Pixal3DCameraControl": Pixal3DCameraControl,
     "Pixal3DImageTo3D": Pixal3DImageTo3D,
     "Pixal3DExportGLB": Pixal3DExportGLB,
     "Pixal3DUnloadModel": Pixal3DUnloadModel,
@@ -404,6 +459,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Pixal3DEnvironmentCheck": "Pixal3D Environment Check",
     "Pixal3DModelLoader": "Pixal3D Model Loader",
+    "Pixal3DCameraControl": "Pixal3D Camera Control",
     "Pixal3DImageTo3D": "Pixal3D Image To 3D",
     "Pixal3DExportGLB": "Pixal3D Export GLB",
     "Pixal3DUnloadModel": "Pixal3D Unload Model",

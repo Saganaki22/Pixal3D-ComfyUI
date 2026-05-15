@@ -915,6 +915,54 @@ def _device_from_to_args(args, kwargs) -> torch.device | None:
     return None
 
 
+def _module_unique_tensors(modules: list[torch.nn.Module]) -> list[torch.Tensor]:
+    tensors: list[torch.Tensor] = []
+    seen: set[int] = set()
+    for module in modules:
+        for tensor in list(module.parameters(recurse=True)) + list(module.buffers(recurse=True)):
+            if tensor is None:
+                continue
+            key = id(tensor)
+            if key in seen:
+                continue
+            seen.add(key)
+            tensors.append(tensor)
+    return tensors
+
+
+class _ModuleResidencyVBar:
+    page_size = 32 * 1024 * 1024
+
+    def __init__(self, modules: list[torch.nn.Module]):
+        self.tensors = _module_unique_tensors(modules)
+        self.total_size = sum(tensor.nelement() * tensor.element_size() for tensor in self.tensors)
+
+    @property
+    def offset(self) -> int:
+        return self.total_size
+
+    def _cuda_size(self) -> int:
+        return sum(
+            tensor.nelement() * tensor.element_size()
+            for tensor in self.tensors
+            if tensor.device.type == "cuda"
+        )
+
+    def loaded_size(self) -> int:
+        return self._cuda_size()
+
+    def get_watermark(self) -> int:
+        return self.loaded_size()
+
+    def get_residency(self) -> list[int]:
+        cuda = self._cuda_size()
+        if self.total_size <= 0:
+            return []
+        pages = max(1, math.ceil(self.total_size / self.page_size))
+        cuda_pages = min(pages, math.ceil(cuda / self.page_size)) if cuda > 0 else 0
+        return [1] * cuda_pages + [0] * (pages - cuda_pages)
+
+
 class Pixal3DTorchWrapper(torch.nn.Module):
     def __init__(self, pipeline, moge_model, vram_mode: str):
         super().__init__()
@@ -940,6 +988,14 @@ class Pixal3DTorchWrapper(torch.nn.Module):
             self.moge_model = moge_model
         else:
             self.moge_model = None
+        self._install_helper_vbars()
+
+    def _install_helper_vbars(self) -> None:
+        rembg = getattr(self, "rembg_model", None)
+        if isinstance(rembg, torch.nn.Module):
+            self.dynamic_vbars["Pixal3D RMBG helper"] = _ModuleResidencyVBar([rembg])
+        if isinstance(self.moge_model, torch.nn.Module):
+            self.dynamic_vbars["Pixal3D MoGe helper"] = _ModuleResidencyVBar([self.moge_model])
 
     def to(self, *args, **kwargs):
         device = _device_from_to_args(args, kwargs)

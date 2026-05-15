@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-__version__ = "0.1.3"
+__version__ = "0.1.5"
 
 LOGGER = logging.getLogger("Pixal3D_ComfyUI")
 
@@ -13,4 +13,6 @@ except Exception as exc:
     NODE_CLASS_MAPPINGS = {}
     NODE_DISPLAY_NAME_MAPPINGS = {}
 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+WEB_DIRECTORY = "./web"
+
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

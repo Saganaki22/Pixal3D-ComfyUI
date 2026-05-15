@@ -95,7 +95,7 @@ Restart ComfyUI after installing or updating.
 
 Pixal3D-ComfyUI includes a guarded `install.py` for ComfyUI Manager, portable ComfyUI, standalone venv installs, and Linux venv installs. By default it installs only the safe runtime requirements and prints an environment report. It does **not** change PyTorch and does **not** install CUDA wheels unless you explicitly enable an exact-match wheel path.
 
-`requirements.txt` is the safe runtime list. It intentionally does not include `torch`, `torchvision`, `flash-attn`, `triton`, `flex_gemm`, `cumesh`, `o_voxel`, `drtk`, or `nvdiffrast`. Those are binary/CUDA stack packages and must be installed from matching wheels. See [requirements-cuda-manual.txt](requirements-cuda-manual.txt), [portable install guide](docs/portable_standalone_install.md), and [Windows wheel guide](docs/windows_wheels.md).
+`requirements.txt` is the safe runtime list. It intentionally does not include `torch`, `torchvision`, `flash-attn`, `triton`, `flex_gemm`, `cumesh`, `o_voxel`, `drtk`, or `nvdiffrast`. Those are binary/CUDA stack packages and must be installed from matching wheels or built for the active environment. See [requirements-cuda-manual.txt](requirements-cuda-manual.txt), [portable install guide](docs/portable_standalone_install.md), [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md), and [Windows wheel guide](docs/windows_wheels.md).
 
 Plain `natten==0.21.6` is included as a baseline dependency because similar Pixal3D wrappers import it. Do not mistake that for strict NAF support. Pixal3D's strict NAF path requires `natten.HAS_LIBNATTEN == True`; a generic `natten-0.21.6-py3-none-any.whl` imports but does not provide CUDA libnatten.
 
@@ -107,7 +107,7 @@ If **Pixal3D Environment Check** reports missing `flex_gemm`, `cumesh`, `o_voxel
 python install.py --install-known-cuda
 ```
 
-If your stack is not in the bundled wheel map, install matching wheels manually from [Windows wheel guide](docs/windows_wheels.md).
+If your stack is not in the bundled wheel map, install matching wheels or source builds manually from [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md) or [Windows wheel guide](docs/windows_wheels.md).
 
 ### Platform Reality Check
 
@@ -147,8 +147,8 @@ The node is **not pinned to one tiny stack**. It should work on any Python/PyTor
 
 | Component | Supported range | Notes |
 |-----------|-----------------|-------|
-| VRAM | **20–32 GB required** | `1536_cascade` needs ~32 GB; `1024_cascade` may fit in ~20 GB with `native_low_vram` |
-| System RAM | **40 GB minimum** | Pixal3D stages large CPU-side tensors before GPU transfer |
+| VRAM | **20–32 GB recommended** | `1536_cascade` needs ~32 GB; `native_low_vram` can run on much lower VRAM in some workflows |
+| System RAM | **40–50 GB recommended for native low-VRAM** | Pixal3D stages large CPU-side tensors before GPU transfer |
 | OS | Windows and Linux CUDA supported; macOS import-only | macOS should not break ComfyUI import, but CUDA generation/export is not supported unless compatible deps exist |
 | Python | `3.10`-`3.13` expected if wheels exist, `3.12.1` target-friendly | Wheels must match the Python ABI, for example `cp312` for Python 3.12.x |
 | PyTorch | `2.8+` expected if wheels exist, including `2.10` | The extension wheels must match the installed Torch ABI/build |
@@ -323,6 +323,20 @@ Loads the Pixal3D pipeline and returns a Comfy-managed model handle.
 
 Advanced source override: set `PIXAL3D_REPO_PATH` before launching ComfyUI if you want to use a different Pixal3D source checkout instead of the vendored source.
 
+### Pixal3D Camera Control
+
+Outputs one bundled native ComfyUI value for manual camera mode:
+
+| Output | Connect to |
+|--------|------------|
+| `manual_fov` | Optional single cable to `Pixal3D Image To 3D.manual_fov` |
+
+The optional `image` input is preview-only for the camera widget. Connect the same `Load Image` node directly to `Pixal3D Image To 3D.image`.
+
+This node only affects Pixal3D when `Pixal3D Image To 3D.camera_mode=manual`. Connect `manual_fov` to `Pixal3D Image To 3D.manual_fov`; when it is connected in manual mode, the scalar `manual_camera_angle_x`, `manual_distance`, and `mesh_scale` inputs on `Pixal3D Image To 3D` are ignored and the Camera Control values are used instead. If `camera_mode=moge`, the connected `manual_fov` is ignored, so MoGe still owns the camera estimate.
+
+The widget has a Scene view for the camera rig and a POV view for the framed camera result. POV uses the same horizontal FOV, distance, and mesh scale values that the node sends to Pixal3D. Horizontal FOV is converted to radians for `manual_camera_angle_x`, and distance/scale are passed through unchanged. It does not expose fake yaw/elevation controls because the Pixal3D manual path does not consume those values.
+
 ### Pixal3D Image To 3D
 
 Runs Pixal3D from a ComfyUI `IMAGE`.
@@ -366,8 +380,18 @@ Fully removes the loaded Pixal3D model handle from ComfyUI model management and 
 
 ```text
 Load Image
-  -> Pixal3D Model Loader
-  -> Pixal3D Image To 3D
+  -> Pixal3D Image To 3D image
+
+Load Image
+  -> Pixal3D Camera Control image  (optional preview only)
+
+Pixal3D Model Loader
+  -> Pixal3D Image To 3D model
+
+Pixal3D Camera Control manual_fov
+  -> Pixal3D Image To 3D manual_fov
+
+Pixal3D Image To 3D
   -> Pixal3D Export GLB
 ```
 
@@ -387,7 +411,20 @@ Pixal3D-ComfyUI keeps one active pipeline cache. Changing Model Loader settings 
 
 Task Manager may still show some RAM held after unload because Python, PyTorch, memory-mapped safetensors, Hugging Face/Transformers imports, and Windows allocators can keep reserved pages for reuse. That is different from the Pixal3D model object still being referenced. A full ComfyUI restart is the only guaranteed way to return every reserved page to the OS immediately.
 
-Pixal3D is still not fully Comfy-native: it has custom sparse kernel modules and large temporary tensors that Aimdo cannot virtualize like a normal Comfy UNet. If Comfy still reports a large `Force pre-loaded` value or a 1536 run OOMs, use `native_low_vram` as the fallback. That mode bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU only when needed. In that mode the background remover is moved to GPU only for preprocessing and then returned to CPU, MoGe is moved to GPU only for camera estimation and then returned to CPU, and the upstream Pixal3D pipeline stages its flow/decoder modules one at a time.
+Pixal3D is still not fully Comfy-native: it has custom sparse kernel modules and large temporary tensors that Aimdo cannot virtualize like a normal Comfy UNet. If Comfy still reports a large `Force pre-loaded` value or a 1536 run OOMs, use `native_low_vram` as the fallback. That mode can run in low VRAM ranges such as **4–8 GB VRAM** for smaller workflows, but it needs a lot of host memory: plan for **40–50 GB system RAM** and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU only when needed. In that mode the background remover is moved to GPU only for preprocessing and then returned to CPU, MoGe is moved to GPU only for camera estimation and then returned to CPU, and the upstream Pixal3D pipeline stages its flow/decoder modules one at a time.
+
+Recommended low-VRAM setup:
+
+| Node | Setting |
+|------|---------|
+| Pixal3D Model Loader | `vram_mode=native_low_vram` |
+| Pixal3D Model Loader | `load_moge=false` |
+| Pixal3D Model Loader | `load_rembg=false` |
+| Pixal3D Image To 3D | `camera_mode=manual` |
+| Pixal3D Image To 3D | `background_mode=keep_alpha` for transparent PNG/WebP inputs |
+| Pixal3D Camera Control | Connect `manual_fov` to `Pixal3D Image To 3D.manual_fov` |
+
+For this path, use a transparent-background PNG or WebP so Pixal3D does not need RMBG, and use **Pixal3D Camera Control** instead of MoGe for camera setup.
 
 Use `full_gpu` only when you want the whole model resident on the GPU and your card has enough free VRAM.
 </details>
