@@ -60,6 +60,22 @@
 - ComfyUI model management, unload, DynamicVRAM, and Aimdo/MemoryVisualization visibility
 - Native low-VRAM Pixal3D mode for staged CPU/GPU movement
 - **Pixal3D Camera Control** node for manual FOV, distance, and mesh-scale setup with Scene/POV preview
+
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/8b53ffe6-115c-4ab2-9170-dc7e8f0e69aa" width="350"><br>
+      <b>scene</b>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/ba6e7a92-89c8-449c-a81a-79a6d67c6011" width="350"><br>
+      <b>POV</b>
+    </td>
+  </tr>
+</table>
+
+
 - GLB path output connects directly to ComfyUI's native **Preview 3D & Animation**
 
 ## Installation
