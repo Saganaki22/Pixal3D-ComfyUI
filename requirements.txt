@@ -1,0 +1,35 @@
+# Pure Python/runtime dependencies for Pixal3D-ComfyUI.
+#
+# Do not add torch, torchvision, flash-attn, triton, flex_gemm, cumesh,
+# o_voxel, drtk, or nvdiffrast here. Those wheels must match the user's
+# ComfyUI Python, PyTorch, CUDA, and platform exactly.
+#
+# Plain natten is included as the baseline package, but it may install as a
+# py3-none-any package where natten.HAS_LIBNATTEN is False. That is useful for
+# basic imports/Flex paths, but it is not enough for Pixal3D strict NAF. See:
+# docs/windows_wheels.md and docs/troubleshooting.md
+accelerate>=1.13.0
+diffusers>=0.37.1
+easydict
+einops
+huggingface_hub>=0.34.0
+hf-transfer>=0.1.9
+hf_xet>=1.1.0
+imageio>=2.0.0
+natten==0.21.6
+numpy>=1.21.0
+opencv-python-headless
+pillow>=9.0.0
+plyfile
+safetensors
+scipy
+timm
+tqdm
+transformers>=4.56.0
+trimesh[easy]
+utils3d
+
+# Native ComfyUI MoGe weights are loaded from ComfyUI/models/moge/, but the
+# Python model class still comes from Microsoft's MoGe package. This commit is
+# the version verified with moge_2_vitl_normal_fp16.safetensors.
+moge @ git+https://github.com/microsoft/MoGe.git@07444410f1e33f402353b99d6ccd26bd31e469e8

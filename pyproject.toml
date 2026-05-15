@@ -1,0 +1,36 @@
+[project]
+name = "Pixal3D-ComfyUI"
+description = "ComfyUI custom nodes for TencentARC Pixal3D image-to-3D generation with GLB export, FlashAttention 2/3 selection, and ComfyUI DynamicVRAM/Aimdo integration"
+version = "0.1.1"
+license = {file = "LICENSE"}
+dependencies = [
+  "accelerate>=1.13.0",
+  "diffusers>=0.37.1",
+  "easydict",
+  "einops",
+  "huggingface_hub>=0.34.0",
+  "hf-transfer>=0.1.9",
+  "hf_xet>=1.1.0",
+  "imageio>=2.0.0",
+  "natten==0.21.6",
+  "numpy>=1.21.0",
+  "opencv-python-headless",
+  "pillow>=9.0.0",
+  "plyfile",
+  "safetensors",
+  "scipy",
+  "timm",
+  "tqdm",
+  "transformers>=4.56.0",
+  "trimesh[easy]",
+  "utils3d",
+  "moge @ git+https://github.com/microsoft/MoGe.git@07444410f1e33f402353b99d6ccd26bd31e469e8",
+]
+
+[project.urls]
+Repository = "https://github.com/Saganaki22/Pixal3D-ComfyUI"
+
+[tool.comfy]
+PublisherId = "saganaki22"
+DisplayName = "Pixal3D"
+Icon = "https://avatars.githubusercontent.com/u/84208527"
