@@ -40,6 +40,16 @@ Pixal3D-ComfyUI 是 TencentARC Pixal3D 的 ComfyUI 节点封装，用于从单�
   <img src="https://github.com/user-attachments/assets/a2ef8b6e-ff68-4a81-a595-1e84eab2062c" width="800">
 </p>
 
+## 功能
+
+- 在 ComfyUI 里直接运行 Pixal3D image-to-3D
+- 从 Pixal3D voxel attributes 导出带贴图的 `.glb`
+- FlashAttention 2 / FlashAttention 3 后端选择，`auto` 会自动选择可用后端
+- ComfyUI 模型管理、卸载、DynamicVRAM、Aimdo/MemoryVisualization 可见性
+- `native_low_vram` 模式，按阶段在 CPU/GPU 之间移动模型
+- **Pixal3D Camera Control** 节点：手动控制 FOV、distance、mesh scale，并提供 Scene/POV 预览
+- `glb_path` 可直接连接到 ComfyUI 原生 **Preview 3D & Animation**
+
 ## 安装
 
 在 ComfyUI 的 Python 环境里安装依赖，不要装到系统 Python。
@@ -66,6 +76,47 @@ uv pip install .
 `requirements.txt` 只包含安全的 runtime 依赖。它故意不包含 `torch`、`torchvision`、`flash-attn`、`triton`、`flex_gemm`、`cumesh`、`o_voxel`、`drtk`、`nvdiffrast`。这些是二进制/CUDA 依赖，必须根据你的环境手动选择轮子或源码构建。参考 [requirements-cuda-manual.txt](requirements-cuda-manual.txt)、[便携版/独立版安装](docs/portable_standalone_install.md)、[Linux/WSL CUDA 指南](docs/linux_wsl_cuda.md) 和 [Windows 轮子指南](docs/windows_wheels.md)。
 
 普通 `natten==0.21.6` 会作为基础依赖安装，和一些 Pixal3D-D 封装保持一致。但这不等于 strict NAF 可用。只有 `natten.HAS_LIBNATTEN == True` 时，才是真正带 CUDA libnatten 的 NAF 路径。
+
+## 必需轮子和模型文件
+
+`requirements.txt` 不是完整 Pixal3D 安装。真正能生成需要下面这些：
+
+| 类型 | 必需项 | 需要能找到/导入什么 | 去哪里装 |
+|------|--------|----------------------|----------|
+| Attention 轮子 | FlashAttention 2 或 3 | 能导入 `flash_attn` 或 `flash_attn_interface` | [Windows 轮子指南](docs/windows_wheels.md#attention-wheels) 或 [Linux/WSL CUDA 指南](docs/linux_wsl_cuda.md#flashattention) |
+| CUDA 轮子 | Sparse GEMM | 能导入 `flex_gemm_ap` 或 `flex_gemm` | [Windows 轮子指南](docs/windows_wheels.md#required-pixal3d-cuda-wheels) 或 [Linux/WSL CUDA 指南](docs/linux_wsl_cuda.md#required-pixal3d-cuda-extensions) |
+| CUDA 轮子 | Mesh ops | 能导入 `cumesh_vb` 或 `cumesh` | 参考对应系统的轮子/编译指南 |
+| CUDA 轮子 | Voxel/remesh ops | 能导入 `o_voxel_vb_ap` 或 `o_voxel` | 参考对应系统的轮子/编译指南 |
+| CUDA 轮子 | DRTK | 能导入 `drtk` | 参考对应系统的轮子/编译指南 |
+| CUDA/runtime 轮子 | Triton | 如果你的 attention/sparse 栈需要它，应能导入 `triton` | Windows 通常用 `triton-windows`；Linux 通常用匹配的 `triton` |
+| 可选 renderer 轮子 | NVIDIA raster/render helper | 能导入 `nvdiffrast` / `nvdiffrec_render` | 仅在你的 renderer 路径需要时安装 |
+| 可选 strict NAF 轮子 | CUDA NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | Linux/WSL 通常有官方轮子；Windows 多数情况用 fallback 或自行编译 |
+| 主模型文件 | TencentARC Pixal3D | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/pipeline.json` 和 `ckpts/*.safetensors` | [TencentARC/Pixal3D](https://huggingface.co/TencentARC/Pixal3D) 或 `download_if_missing=true` |
+| DINOv3 helper 文件 | Pixal3D image encoder | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/model.safetensors` | 开启 helper 下载，或手动放完整 snapshot |
+| MoGe 相机文件 | 自动相机模式 | `ComfyUI/models/moge/moge_2_vitl_normal_fp16.safetensors` | [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe)，或改用 `camera_mode=manual` |
+| RMBG 文件 | 内置背景移除 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` 完整 snapshot | [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) 是 gated model，先申请权限；也可用透明 PNG/WebP 跳过 |
+
+最低显存/手动相机路线可以跳过 MoGe 和 RMBG：设置 `load_moge=false`、`load_rembg=false`，使用透明 PNG/WebP，`background_mode=keep_alpha`，并把 **Pixal3D Camera Control** 连接到 `manual_fov`。
+
+## 我到底缺什么？
+
+先运行 **Pixal3D Environment Check**，然后按第一条缺失信息查表：
+
+| Environment Check 显示 | 代表什么 | 该怎么做 |
+|------------------------|----------|----------|
+| `flash_attn: MISSING` 且 `flash_attn_interface: MISSING` | 缺 attention 后端 | 安装匹配 Python/PyTorch/CUDA/系统的 FlashAttention 2 或 3 轮子 |
+| `flex_gemm_ap: MISSING` 且 `flex_gemm: MISSING` | 缺 Pixal3D sparse GEMM 扩展 | 安装/编译匹配的 `flex_gemm_ap` 或 `flex_gemm` |
+| `cumesh_vb: MISSING` 且 `cumesh: MISSING` | 缺 Pixal3D mesh 扩展 | 安装/编译匹配的 `cumesh_vb` 或 `cumesh` |
+| `o_voxel_vb_ap: MISSING` 且 `o_voxel: MISSING` | 缺 Pixal3D voxel/remesh 扩展 | 安装/编译匹配的 `o_voxel_vb_ap` 或 `o_voxel` |
+| `drtk: MISSING` | 缺 DRTK renderer 依赖 | 安装/编译匹配的 `drtk` |
+| `triton: MISSING` | 缺 Triton runtime | 如果你的轮子栈需要 Triton，Windows 安装匹配的 `triton-windows`，Linux 安装匹配的 `triton` |
+| `nvdiffrast: MISSING` 或 `nvdiffrec_render: MISSING` | 缺可选 renderer 包 | 基础 GLB 导出通常不需要；只有 renderer 路径需要时再装 |
+| `natten: MISSING` | 缺基础 NATTEN 导入 | 重新安装 `requirements.txt`，或在 ComfyUI Python 里运行 `pip install natten==0.21.6` |
+| `natten.HAS_LIBNATTEN: False` | NATTEN 能导入，但 strict CUDA NAF 不可用 | 使用 `naf_mode=fallback_if_missing`，或安装/编译匹配 CUDA NATTEN/libnatten |
+| `RMBG-2.0` 缺失或 gated | 背景移除模型不可用 | 先在 Hugging Face 申请 [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) 权限并下载，或用透明 PNG/WebP + `background_mode=keep_alpha` |
+| MoGe 缺失 | 自动相机模型不可用 | 下载 [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe)，或用 `camera_mode=manual` + **Pixal3D Camera Control** |
+
+Windows 用户先看 [Windows 轮子指南](docs/windows_wheels.md)。Linux/WSL 用户先看 [Linux/WSL CUDA 指南](docs/linux_wsl_cuda.md)。修 CUDA 包时不要让 pip 替换已经工作的 Torch；按指南使用精确轮子或 `--no-deps`。
 
 ## 硬件要求
 

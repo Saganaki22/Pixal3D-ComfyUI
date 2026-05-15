@@ -41,7 +41,7 @@
 [![RMBG-2.0](https://img.shields.io/badge/RMBG--2.0-gated-orange)](https://huggingface.co/briaai/RMBG-2.0)
 [![License](https://img.shields.io/badge/License-see%20LICENSE-lightgrey)](LICENSE)
 
-[中文说明](README_ZH.md) | [Compatibility](docs/compatibility_matrix.md) | [Portable Install](docs/portable_standalone_install.md) | [Windows Wheels](docs/windows_wheels.md) | [Troubleshooting](docs/troubleshooting.md) | [Related Repos](docs/related_repos.md)
+[中文说明](README_ZH.md) | [Compatibility](docs/compatibility_matrix.md) | [Portable Install](docs/portable_standalone_install.md) | [Linux/WSL CUDA](docs/linux_wsl_cuda.md) | [Windows Wheels](docs/windows_wheels.md) | [Troubleshooting](docs/troubleshooting.md) | [Related Repos](docs/related_repos.md)
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa" width="1200"><br><br>
@@ -110,6 +110,27 @@ python install.py --install-known-cuda
 
 If your stack is not in the bundled wheel map, install matching wheels or source builds manually from [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md) or [Windows wheel guide](docs/windows_wheels.md).
 
+### Required Wheels And Model Files
+
+`requirements.txt` is not the full Pixal3D install. A working generation environment needs these too:
+
+| Type | Required item | What file/module should exist | Where to get it |
+|---|---|---|---|
+| Attention wheel | FlashAttention 2 or 3 | `flash_attn` or `flash_attn_interface` imports | [Windows wheels](docs/windows_wheels.md#attention-wheels) or [Linux/WSL guide](docs/linux_wsl_cuda.md#flashattention) |
+| CUDA wheel | Sparse GEMM | `flex_gemm_ap` or `flex_gemm` imports | [Windows wheels](docs/windows_wheels.md#required-pixal3d-cuda-wheels) or [Linux/WSL guide](docs/linux_wsl_cuda.md#required-pixal3d-cuda-extensions) |
+| CUDA wheel | Mesh ops | `cumesh_vb` or `cumesh` imports | Same wheel guide for your OS |
+| CUDA wheel | Voxel/remesh ops | `o_voxel_vb_ap` or `o_voxel` imports | Same wheel guide for your OS |
+| CUDA wheel | DRTK | `drtk` imports | Same wheel guide for your OS |
+| CUDA/runtime wheel | Triton | `triton` imports if your attention/sparse stack expects it | Windows usually uses `triton-windows`; Linux usually uses matching `triton` |
+| Optional renderer wheel | NVIDIA raster/render helpers | `nvdiffrast` / `nvdiffrec_render` imports | Optional; install only if your renderer path needs them |
+| Optional strict NAF wheel | CUDA NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | Linux/WSL usually has official wheels; Windows often needs fallback or a source build |
+| Main model files | TencentARC Pixal3D | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/pipeline.json` and `ckpts/*.safetensors` | [TencentARC/Pixal3D](https://huggingface.co/TencentARC/Pixal3D) or `download_if_missing=true` |
+| DINOv3 helper files | Pixal3D image encoder | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/model.safetensors` | Downloaded with helpers when enabled, or place a complete snapshot there |
+| MoGe camera files | Auto camera mode | `ComfyUI/models/moge/moge_2_vitl_normal_fp16.safetensors` | [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe), or skip with `camera_mode=manual` |
+| RMBG files | Built-in background removal | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` complete snapshot | [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) is gated; request access first, or use transparent PNG/WebP |
+
+For the easiest low-VRAM/manual setup, you can skip MoGe and RMBG: set `load_moge=false`, `load_rembg=false`, use a transparent PNG/WebP with `background_mode=keep_alpha`, and connect **Pixal3D Camera Control** to `manual_fov`.
+
 ### What Am I Missing?
 
 Run **Pixal3D Environment Check** first. Match the first missing line to this table:
@@ -121,6 +142,7 @@ Run **Pixal3D Environment Check** first. Match the first missing line to this ta
 | `cumesh_vb: MISSING` and `cumesh: MISSING` | Pixal3D mesh extension is missing | Install/build matching `cumesh_vb` or `cumesh` |
 | `o_voxel_vb_ap: MISSING` and `o_voxel: MISSING` | Pixal3D voxel/remesh extension is missing | Install/build matching `o_voxel_vb_ap` or `o_voxel` |
 | `drtk: MISSING` | DRTK renderer dependency is missing | Install/build matching `drtk` |
+| `triton: MISSING` | Triton runtime is missing | Install matching `triton-windows` on Windows or matching `triton` on Linux if your wheel stack needs it |
 | `nvdiffrast: MISSING` or `nvdiffrec_render: MISSING` | Optional renderer packages are missing | Install only if your workflow needs those renderer paths; basic GLB export can work without them |
 | `natten: MISSING` | Baseline NATTEN import is missing | Reinstall `requirements.txt` or run `pip install natten==0.21.6` in ComfyUI's Python |
 | `natten.HAS_LIBNATTEN: False` | NATTEN imports, but strict CUDA NAF is not available | Use `naf_mode=fallback_if_missing`, or install/build CUDA NATTEN/libnatten for your stack |
