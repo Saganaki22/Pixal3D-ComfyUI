@@ -203,6 +203,27 @@ def _is_blackwell_gpu() -> bool:
     return capability is not None and capability[0] >= 12
 
 
+def _release_cached_memory(aggressive: bool = False) -> None:
+    gc.collect()
+    try:
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    except Exception:
+        pass
+    try:
+        model_management.soft_empty_cache()
+    except Exception:
+        pass
+    if aggressive and os.name == "nt":
+        try:
+            import ctypes
+
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            ctypes.windll.kernel32.SetProcessWorkingSetSize(handle, -1, -1)
+        except Exception:
+            LOGGER.debug("Could not trim Windows process working set", exc_info=True)
+
+
 def _sanitize_module_name(name: str) -> str:
     return re.sub(r"[^0-9a-zA-Z_]", "_", name)
 
@@ -643,6 +664,29 @@ def _move_rembg_model(pipeline: Any, device: torch.device) -> None:
         rembg_model.to(device)
 
 
+def _cpu_module(module: Any) -> None:
+    if isinstance(module, torch.nn.Module):
+        try:
+            module.cpu()
+        except Exception:
+            LOGGER.debug("Could not move Pixal3D module to CPU", exc_info=True)
+
+
+def _offload_low_vram_pipeline_modules(pipeline: Any) -> None:
+    for module in getattr(pipeline, "models", {}).values():
+        _cpu_module(module)
+    for attr in (
+        "image_cond_model_ss",
+        "image_cond_model_shape_512",
+        "image_cond_model_shape_1024",
+        "image_cond_model_tex_1024",
+        "rembg_model",
+    ):
+        module = getattr(pipeline, attr, None)
+        if module is not None and not (attr == "rembg_model" and _rembg_is_disabled(pipeline)):
+            _cpu_module(module)
+
+
 def prepare_pipeline_config(
     model_path: str,
     download_if_missing: bool,
@@ -912,11 +956,12 @@ class Pixal3DTorchWrapper(torch.nn.Module):
 
     def activate_device(self, device: torch.device) -> None:
         self.active_device = torch.device(device)
-        self.pipeline._device = self.active_device
         if self.vram_mode == "native_low_vram":
-            self.pipeline.cpu()
+            _offload_low_vram_pipeline_modules(self.pipeline)
             if self.moge_model is not None:
                 self.moge_model.cpu()
+            _release_cached_memory()
+        self.pipeline._device = self.active_device
 
     def forward(self, *args, **kwargs):
         raise RuntimeError("Pixal3DTorchWrapper is a Comfy model-management wrapper, not a direct nn.Module.")
@@ -1005,8 +1050,7 @@ class Pixal3DHandle:
                     patcher.detach()
         finally:
             prune_stale_loaded_models()
-            gc.collect()
-            model_management.soft_empty_cache()
+            _release_cached_memory()
 
     def destroy(self) -> None:
         if self.destroyed:
@@ -1024,8 +1068,7 @@ class Pixal3DHandle:
                 except Exception:
                     pass
             self.destroyed = True
-            gc.collect()
-            model_management.soft_empty_cache()
+            _release_cached_memory(aggressive=True)
 
 
 @dataclass
@@ -1235,6 +1278,7 @@ def estimate_camera_params(
         output = moge_model.infer(image_tensor)
     if offload_after:
         moge_model.cpu()
+        _release_cached_memory()
     intrinsics = output["intrinsics"].squeeze().detach().cpu().numpy()
     fx = float(intrinsics[0, 0] * width)
     camera_angle_x = 2 * math.atan(width / (2 * fx))
@@ -1303,7 +1347,7 @@ def run_pixal3d(
             _move_rembg_model(pipeline, device)
             image_preprocessed = pipeline.preprocess_image(image.convert("RGBA" if image.mode == "RGBA" else "RGB"))
             if handle.vram_mode == "native_low_vram":
-                model_management.soft_empty_cache()
+                _release_cached_memory()
         elif background_mode == "keep_alpha":
             if image.mode != "RGBA":
                 if _rembg_is_disabled(pipeline):
@@ -1315,7 +1359,7 @@ def run_pixal3d(
                 _move_rembg_model(pipeline, device)
                 image_preprocessed = pipeline.preprocess_image(image.convert("RGB"))
                 if handle.vram_mode == "native_low_vram":
-                    model_management.soft_empty_cache()
+                    _release_cached_memory()
             else:
                 image_preprocessed = pipeline.preprocess_image(image.convert("RGBA"))
         elif background_mode == "none":
@@ -1388,14 +1432,12 @@ def run_pixal3d(
             camera_params=camera_params,
         )
         del shape_slat, tex_slat, mesh_list
-        gc.collect()
-        model_management.soft_empty_cache()
+        _release_cached_memory()
         return result
     except torch.OutOfMemoryError:
         LOGGER.warning("Pixal3D hit CUDA OOM; offloading the active handle before re-raising.")
         handle.offload()
-        gc.collect()
-        model_management.soft_empty_cache()
+        _release_cached_memory()
         raise
     finally:
         if force_offload:

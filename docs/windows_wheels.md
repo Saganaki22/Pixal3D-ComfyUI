@@ -2,10 +2,10 @@
 
 Install these into ComfyUI's Python environment only. Do not install them into system Python.
 
-Example path:
+Generic venv example:
 
 ```bat
-cd C:\Users\drbaph\Documents\ComfyUI
+cd C:\path\to\ComfyUI
 venv\Scripts\python.exe -m pip install --no-deps "<wheel-url>"
 ```
 
@@ -62,7 +62,7 @@ venv\Scripts\python.exe -m pip install --no-deps ^
 
 ## Attention Wheels
 
-Pixal3D needs FlashAttention 2 or FlashAttention 3.
+Pixal3D needs FlashAttention 2 or FlashAttention 3 before the model can load. Treat this as a prerequisite; the guarded installer does not install FlashAttention.
 
 ### FlashAttention 2
 
@@ -94,7 +94,7 @@ Then set `attention_backend=flash_attn_3`, or leave `attention_backend=auto`.
 
 Triton is optional for Pixal3D-ComfyUI, but many Windows AI environments already use it.
 
-For Blackwell-class NVIDIA GPUs:
+If your Windows stack needs Triton:
 
 ```bat
 venv\Scripts\python.exe -m pip install -U "triton-windows<3.7"
@@ -148,7 +148,7 @@ Notes:
 
 - The official index describes these as x86-64/aarch64 builds, but the current wheel files for PyTorch 2.10/2.11 are Linux wheels. On Windows, pip will reject them because they are not `win_amd64`.
 - For CUDA 12.6 builds, Blackwell FNA/FMHA kernels are not available. Blackwell support starts with CUDA Toolkit 12.8.
-- For the locked local stack, do not change Python or Torch. Use `naf_mode=fallback_if_missing` unless a real Python 3.12 + Torch 2.10 + CUDA 13.0 Windows NATTEN wheel is found or a local source build succeeds.
+- For Windows Python 3.12 + Torch 2.10 + CUDA 13.0, do not change Python or Torch just to chase NATTEN. Use `naf_mode=fallback_if_missing` unless a real matching Windows NATTEN wheel is found or a local source build succeeds.
 - Use `--no-deps` when testing a NATTEN wheel inside an existing ComfyUI environment so pip does not change Torch:
 
 ```bat
@@ -178,7 +178,7 @@ Open a normal Command Prompt and launch the MSVC developer environment:
 Then run:
 
 ```bat
-cd /d C:\Users\drbaph\Documents\ComfyUI
+cd /d C:\path\to\ComfyUI
 set PATH=%CD%\venv\Scripts;%PATH%
 set CMAKE_GENERATOR=Ninja
 set CMAKE_MAKE_PROGRAM=%CD%\venv\Scripts\ninja.exe
@@ -197,7 +197,7 @@ venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation --no-binar
 venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
 ```
 
-For Blackwell-class cards where PyTorch reports compute capability `12.0`, use `NATTEN_CUDA_ARCH=12.0`. If the build succeeds and another ComfyUI package needs old setuptools, restore it afterward:
+For GPUs where PyTorch reports compute capability `12.0`, use `NATTEN_CUDA_ARCH=12.0`. If the build succeeds and another ComfyUI package needs old setuptools, restore it afterward:
 
 ```bat
 venv\Scripts\python.exe -m pip install "setuptools==65.0.0"

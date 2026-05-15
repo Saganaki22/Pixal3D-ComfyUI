@@ -8,10 +8,12 @@
 #   torch
 #   torchvision
 #
-# Required CUDA extensions:
+# Attention prerequisite, install separately for your exact stack:
 #   flash-attn               # provides flash_attn, or use FlashAttention 3 below
 #   flash-attn-3 wheel       # provides flash_attn_interface
 #   triton / triton-windows
+#
+# Required Pixal3D CUDA extensions:
 #   flex_gemm_ap / flex_gemm
 #   cumesh_vb / cumesh
 #   o_voxel_vb_ap / o_voxel
@@ -34,11 +36,10 @@
 # It dispatches sparse/variable-length attention for ComfyUI-style models, but
 # does not provide NATTEN neighborhood-attention APIs or libnatten CUDA kernels.
 #
-# For the locked local stack discussed in docs:
+# Example Windows stack discussed in docs:
 #   Python 3.12
 #   PyTorch 2.10.0+cu130
 #   CUDA runtime 13.0
-#   RTX 5090 / Blackwell
 #
 # The official NATTEN command for this torch/cuda tag is:
 #   pip install natten==0.21.6+torch2100cu130 -f https://whl.natten.org

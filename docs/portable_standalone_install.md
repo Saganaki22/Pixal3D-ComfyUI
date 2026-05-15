@@ -6,7 +6,7 @@ The installer does three things:
 
 1. Installs `requirements.txt` into the Python that is running ComfyUI.
 2. Detects OS, Python ABI, PyTorch, CUDA, GPU, and import status.
-3. Optionally installs exact known CUDA wheel URLs if explicitly enabled.
+3. Optionally installs exact known Pixal3D CUDA extension wheels if explicitly enabled.
 
 It does not install CUDA `libnatten` by default, and it does not change PyTorch.
 `requirements.txt` installs plain `natten==0.21.6` as the baseline package. That is not the same as a CUDA `libnatten` build; strict NAF still requires `natten.HAS_LIBNATTEN == True`.
@@ -42,6 +42,8 @@ python_embeded\python.exe -s ComfyUI\custom_nodes\Pixal3D-ComfyUI\install.py
 
 The known wheel map currently covers selected Windows `cp312` stacks from the documented Pozzetti wheel URLs. If your stack is not listed, the installer prints the detected key and links you back to the wheel docs.
 
+FlashAttention 2 or 3 remains a prerequisite. `--install-known-cuda` installs Pixal3D extension groups such as `flex_gemm`, `cumesh`, `o_voxel`, and `drtk`; it does not install FlashAttention.
+
 Native Windows `libnatten` is not installed automatically. Upstream NATTEN points Windows users to MSVC source builds. Use `naf_mode=fallback_if_missing` unless you build NATTEN/libnatten yourself.
 
 ## Windows Standalone Venv
@@ -58,7 +60,7 @@ Check only:
 venv\Scripts\python.exe custom_nodes\Pixal3D-ComfyUI\install.py --check
 ```
 
-Install exact known CUDA wheels:
+Install exact known Pixal3D CUDA extension wheels:
 
 ```bat
 set PIXAL3D_INSTALL_KNOWN_CUDA=1
@@ -147,9 +149,9 @@ If a broader verified wheel index becomes available, `comfy-env` can be added la
 
 | Mode | Pure deps | Known CUDA wheels | NATTEN strict NAF |
 |------|-----------|-------------------|-------------------|
-| ComfyUI Manager | Yes | Explicit only | Manual/source build |
-| Windows portable | Yes | Explicit exact-match only | Manual/source build |
-| Windows venv | Yes | Explicit exact-match only | Manual/source build |
+| ComfyUI Manager | Yes | Pixal3D extensions explicit only | Manual/source build |
+| Windows portable | Yes | Pixal3D extensions explicit exact-match only | Manual/source build |
+| Windows venv | Yes | Pixal3D extensions explicit exact-match only | Manual/source build |
 | Linux venv | Yes | Manual for now | Easier via upstream NATTEN wheels if stack matches |
 
 ## Safety Rules

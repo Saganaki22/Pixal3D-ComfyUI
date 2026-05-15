@@ -24,6 +24,7 @@ ATTENTION_GROUPS = (
     ("FlashAttention 3", ("flash_attn_interface",)),
 )
 OPTIONAL_MODULES = ("triton", "nvdiffrast.torch", "nvdiffrec_render", "natten")
+KNOWN_CUDA_PACKAGES = "flex_gemm, cumesh, o_voxel, and drtk"
 
 # Known-good Windows wheel URLs. These are exact-stack installs, not guesses.
 # requirements.txt installs plain natten, but strict NAF still needs a matching
@@ -34,7 +35,6 @@ KNOWN_CUDA_WHEELS: dict[tuple[str, str, str, str], list[str]] = {
         "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl",
         "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu130torch2.10-cp312-cp312-win_amd64.whl",
         "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl",
-        "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flash_attn-latest/flash_attn-2.8.3%2Bcu130torch2.10-cp312-cp312-win_amd64.whl",
     ],
     ("windows", "cp312", "torch2.9", "cu130"): [
         "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu130torch2.9-cp312-cp312-win_amd64.whl",
@@ -173,8 +173,10 @@ def print_runtime_report(info: RuntimeInfo) -> None:
 
     print("")
     print("Required CUDA/Pixal3D modules:")
+    missing_required = False
     for label, names in REQUIRED_GROUPS:
         ok, detail = import_status(names)
+        missing_required = missing_required or not ok
         print(f"- {label}: {'OK' if ok else 'MISSING'} ({detail})")
 
     print("")
@@ -203,6 +205,14 @@ def print_runtime_report(info: RuntimeInfo) -> None:
         print("Attention requirement: OK")
     else:
         print("Attention requirement: missing flash_attn or flash_attn_interface")
+    if missing_required:
+        print("")
+        print("Required Pixal3D CUDA modules are missing.")
+        print(f"--install-known-cuda installs: {KNOWN_CUDA_PACKAGES}.")
+        print("FlashAttention 2 or 3 is a prerequisite and must already match this environment.")
+        print("This is opt-in because the wheels must exactly match Python, PyTorch, CUDA, and OS.")
+        print("If this detected stack is in the bundled wheel map, rerun with --install-known-cuda or set PIXAL3D_INSTALL_KNOWN_CUDA=1.")
+        print("Otherwise install matching wheels from docs/windows_wheels.md.")
 
 
 def install_requirements(*, dry_run: bool = False) -> None:
@@ -217,14 +227,16 @@ def install_known_cuda(info: RuntimeInfo, *, dry_run: bool = False) -> None:
     key = info.wheel_key
     if key is None or key not in KNOWN_CUDA_WHEELS:
         print("")
-        print("No exact known CUDA wheel set is bundled for this stack.")
+        print("No exact known Pixal3D CUDA extension wheel set is bundled for this stack.")
         print(f"Detected key: {key}")
         print("See docs/windows_wheels.md and requirements-cuda-manual.txt.")
         return
 
     print("")
-    print("Installing exact known CUDA wheels for:")
+    print("Installing exact known Pixal3D CUDA extension wheels for:")
     print(key)
+    print(f"Package groups: {KNOWN_CUDA_PACKAGES}")
+    print("FlashAttention is treated as a prerequisite and is not installed by this option.")
     print("Strict NAF still needs a real libnatten build; plain natten is not enough.")
     code = pip_install(["--no-deps", *KNOWN_CUDA_WHEELS[key]], dry_run=dry_run)
     if code != 0:
@@ -265,7 +277,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Pixal3D-ComfyUI portable/standalone installer")
     parser.add_argument("--check", action="store_true", help="Only print the runtime/import report")
     parser.add_argument("--skip-requirements", action="store_true", help="Do not install requirements.txt")
-    parser.add_argument("--install-known-cuda", action="store_true", help="Install bundled exact-match CUDA wheel URLs when available")
+    parser.add_argument("--install-known-cuda", action="store_true", help="Install bundled exact-match Pixal3D CUDA extension wheels when available")
     parser.add_argument("--install-natten", action="store_true", help="Install official NATTEN+libnatten package when available for Linux/WSL")
     parser.add_argument("--dry-run", action="store_true", help="Print commands without running them")
     args = parser.parse_args(argv)

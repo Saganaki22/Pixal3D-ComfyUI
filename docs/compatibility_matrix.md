@@ -4,11 +4,11 @@ Pixal3D-ComfyUI does not pin one global Python, PyTorch, or CUDA version. It wor
 
 Use **Pixal3D Environment Check** inside ComfyUI after installing wheels.
 
-## Known Working Local Stack
+## Verified Example Stack
 
 | OS | Python | PyTorch | CUDA runtime | GPU | Attention | Status |
 |---|---:|---:|---:|---|---|---|
-| Windows | 3.12.10 | 2.10.0+cu130 | 13.0 | Blackwell-class NVIDIA GPU | FlashAttention 2.8.3 cu130 torch2.10 | Required imports pass; use `naf_mode=fallback_if_missing`; `remesh` is user-controlled |
+| Windows | 3.12.x | 2.10.0+cu130 | 13.0 | NVIDIA CUDA GPU | FlashAttention 2.8.3 cu130 torch2.10 | Required imports pass when matching CUDA wheels are installed; use `naf_mode=fallback_if_missing` unless `natten.HAS_LIBNATTEN=True` |
 
 Required Pixal3D CUDA module APIs for this stack:
 
@@ -35,26 +35,20 @@ flash_attn or flash_attn_interface
 | Platform | Windows needs `win_amd64`; Linux needs matching Linux wheels or source builds |
 | GPU | CUDA-capable NVIDIA GPU with matching compiled wheels |
 
-## Locked Local Target
+## Recommended Settings By Platform
 
-This nodepack is currently tuned for the local ComfyUI environment:
+Pixal3D-ComfyUI is not tied to a specific folder. It uses whichever Python environment launches ComfyUI. The important part is that every compiled wheel imports inside that same environment.
 
-```text
-C:\Users\drbaph\Documents\ComfyUI\venv
-Python 3.12
-PyTorch 2.10.0+cu130
-CUDA runtime 13.0
-Blackwell-class NVIDIA GPU
-```
-
-Do not change Python or PyTorch to solve Pixal3D unless you deliberately want a new ComfyUI environment. The node now defaults to the path that can work in this stack today:
+For Windows Python 3.12 + PyTorch 2.10 + CUDA 13.0, use this practical setup:
 
 | Area | Setting |
 |---|---|
 | Attention | `flash_attn` 2.8.3 cu130 torch2.10, or another matching FlashAttention wheel |
 | NAF | `naf_mode=fallback_if_missing` |
 | NAF target | `upstream` unless strict NAF is installed; lower values only matter for real NAF |
-| Export | `decimation_target=1000000`, `texture_size=4096`; `remesh=true` is accepted and passed through as requested |
+| Export | `decimation_target=1000000`, `texture_size=4096`, `remesh=true` by default |
+
+For Linux or WSL, install official NATTEN/libnatten wheels when your PyTorch/CUDA stack is listed by NATTEN. That is the recommended path for exact upstream NAF behavior.
 
 ## Helper Models
 
@@ -92,7 +86,7 @@ On Windows stacks without a matching CUDA NATTEN build, use `naf_mode=fallback_i
 
 For exact upstream NAF behavior, install a CUDA-enabled NATTEN wheel matching Python, PyTorch, CUDA, and GPU architecture, then use `naf_mode=strict`.
 
-For the locked local stack, the official `natten==0.21.6+torch2100cu130` index currently exposes Linux wheels, not `win_amd64` wheels. visualbruno's Pixal3D branch has a Windows `natten-0.21.6` wheel for Python 3.12 + Torch 2.8 and a Torch 2.10 CUDA 13.1 NATTEN wheel for Python 3.13, but not Python 3.12 + Torch 2.10. Pixal3D-ComfyUI installs plain `natten==0.21.6` as a baseline dependency, but if `natten.HAS_LIBNATTEN` is `False`, strict NAF is still unavailable.
+For Windows Python 3.12 + PyTorch 2.10 + CUDA 13.0, the official `natten==0.21.6+torch2100cu130` index currently exposes Linux wheels, not `win_amd64` wheels. visualbruno's Pixal3D branch has a Windows `natten-0.21.6` wheel for Python 3.12 + Torch 2.8 and a Torch 2.10 CUDA 13.1 NATTEN wheel for Python 3.13, but not Python 3.12 + Torch 2.10. Pixal3D-ComfyUI installs plain `natten==0.21.6` as a baseline dependency, but if `natten.HAS_LIBNATTEN` is `False`, strict NAF is still unavailable.
 
 `naf_target_size` only affects strict/real NAF:
 

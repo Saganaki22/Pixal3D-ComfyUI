@@ -557,9 +557,26 @@ class DinoV3ProjFeatureExtractor(nn.Module):
             image = [i.resize((self.image_size, self.image_size), Image.LANCZOS) for i in image]
             image = [np.array(i.convert('RGB')).astype(np.float32) / 255 for i in image]
             image = [torch.from_numpy(i).permute(2, 0, 1).float() for i in image]
-            image = torch.stack(image).cuda()
+            image = torch.stack(image)
         else:
             raise ValueError(f"Unsupported type of image: {type(image)}")
+
+        patch_embed = self.model.embeddings.patch_embeddings
+        target_device = camera_angle_x.device if isinstance(camera_angle_x, torch.Tensor) else image.device
+        if (
+            patch_embed.weight.device != target_device
+            and not getattr(patch_embed, "comfy_cast_weights", False)
+        ):
+            self.to(target_device)
+        image = image.to(device=target_device)
+        if camera_angle_x is not None:
+            camera_angle_x = camera_angle_x.to(device=target_device)
+        if distance is not None:
+            distance = distance.to(device=target_device)
+        if mesh_scale is not None:
+            mesh_scale = mesh_scale.to(device=target_device)
+        if transform_matrix is not None:
+            transform_matrix = transform_matrix.to(device=target_device)
         
         B = image.shape[0]
         

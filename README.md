@@ -99,11 +99,28 @@ Pixal3D-ComfyUI includes a guarded `install.py` for ComfyUI Manager, portable Co
 
 Plain `natten==0.21.6` is included as a baseline dependency because similar Pixal3D wrappers import it. Do not mistake that for strict NAF support. Pixal3D's strict NAF path requires `natten.HAS_LIBNATTEN == True`; a generic `natten-0.21.6-py3-none-any.whl` imports but does not provide CUDA libnatten.
 
+FlashAttention 2 or 3 is a prerequisite. Install a matching FlashAttention wheel for your Python, PyTorch, CUDA, and OS before loading Pixal3D.
+
+If **Pixal3D Environment Check** reports missing `flex_gemm`, `cumesh`, `o_voxel`, or `drtk`, the normal install did not fail. Those are Pixal3D compiled CUDA wheels and are opt-in. On a known Windows stack, run:
+
+```bash
+python install.py --install-known-cuda
+```
+
+If your stack is not in the bundled wheel map, install matching wheels manually from [Windows wheel guide](docs/windows_wheels.md).
+
 ### Platform Reality Check
 
 For the smoothest full upstream Pixal3D experience, Linux or WSL is recommended because upstream NATTEN publishes prebuilt NATTEN/libnatten wheels for recent official PyTorch CUDA stacks there.
 
 Native Windows is supported and can generate/export GLBs, but it may need fallback settings unless exact Windows CUDA wheels exist for your stack. In particular, for Python 3.12 + PyTorch 2.10 + CUDA 13.0, there is currently no known official `win_amd64` NATTEN/libnatten wheel for `natten==0.21.6+torch2100cu130`. Plain `natten==0.21.6` is installed for baseline imports, but if `natten.HAS_LIBNATTEN` is `False`, use `naf_mode=fallback_if_missing` instead of `strict`.
+
+Recommended default:
+
+| Environment | Recommendation |
+|---|---|
+| Linux/WSL NVIDIA | Best path for full upstream NAF if official NATTEN/libnatten wheels match your Torch/CUDA |
+| Native Windows NVIDIA | Works, but use exact CUDA extension wheels and `naf_mode=fallback_if_missing` unless `natten.HAS_LIBNATTEN` is `True` |
 
 <details>
 <summary>Guarded Installer Policy</summary>
@@ -140,24 +157,13 @@ The node is **not pinned to one tiny stack**. It should work on any Python/PyTor
 | FlashAttention 2 newer stacks | Torch `2.10` / CUDA `13.x` should work if your wheel imports | Select `flash_attn_2` or use `auto` |
 | FlashAttention 3 | Torch `>=2.9` and matching wheel expected | Must provide the `flash_attn_interface` module |
 | Triton | Windows: matching `triton-windows`; Linux: matching `triton` | Required by several modern CUDA wheel stacks |
-| Required CUDA wheels | `flex_gemm_ap`/`flex_gemm`, `o_voxel_vb_ap`/`o_voxel`, `cumesh_vb`/`cumesh`, `drtk`, plus FlashAttention 2 or 3 | These must match Python, Torch, CUDA, and OS |
+| Required Pixal3D CUDA wheels | `flex_gemm_ap`/`flex_gemm`, `o_voxel_vb_ap`/`o_voxel`, `cumesh_vb`/`cumesh`, `drtk` | These must match Python, Torch, CUDA, and OS |
 | Optional CUDA wheels | `nvdiffrast`, `nvdiffrec_render` | Useful for renderer paths, not the basic GLB export path |
 | ComfyUI | Current ComfyUI with `CoreModelPatcher` and `load_models_gpu` | Needed for DynamicVRAM/Aimdo/MemoryVisualization visibility |
-| GPU compute capability | `sm80`-`sm100` (Ampere, Ada Lovelace, Hopper) preferred; `sm120` (Blackwell) works | See GPU Compute Capability below |
+| GPU | CUDA-capable NVIDIA GPU | Newer GPU architectures need extension wheels built for that Torch/CUDA stack |
 | CPU only | Not supported | Pixal3D sparse/mesh ops need CUDA |
 
-#### GPU Compute Capability
-
-| Tier | Architectures | Status |
-|------|---------------|--------|
-| `sm80`-`sm89` | Ampere (A100, RTX 3090), Ada Lovelace (RTX 4090) | Fully supported. FlashAttention 2/3 and NATTEN/libnatten wheels are available. |
-| `sm90` | Hopper (H100) | Fully supported. Same wheel availability as Ampere/Ada. |
-| `sm100` | Blackwell (B200) | Expected supported. FlashAttention 2/3 wheels should be available; verify NATTEN/libnatten for your stack. |
-| `sm120` | Blackwell consumer (RTX 5090) | **Works but without strict NAF.** FlashAttention 2/3 wheels are available, but there are currently no prebuilt NATTEN/libnatten wheels for `sm120`. Use `naf_mode=fallback_if_missing`. |
-
-Linux or WSL is the best way to get full NAF support across all tiers because upstream NATTEN publishes prebuilt wheels there. On native Windows, even `sm80`-`sm100` may need fallback settings unless an exact matching `win_amd64` NATTEN wheel exists for your Python/PyTorch/CUDA stack.
-
-Known tested stack:
+Example verified stack, not a required install path:
 
 ```text
 Windows
@@ -168,7 +174,7 @@ flash-attn 2.8.3+cu128torch2.8.0
 triton-windows 3.5+
 ```
 
-Your stack should be valid if the required imports pass:
+Another valid stack shape:
 
 ```text
 Windows
@@ -266,7 +272,7 @@ This node uses ComfyUI's Python environment only. Do not install these packages 
 For Windows, FlashAttention 2 is enough if the wheel matches your exact Python, PyTorch, and CUDA build:
 
 ```bash
-cd C:\Users\drbaph\Documents\ComfyUI
+cd C:\path\to\ComfyUI
 .\venv\Scripts\python.exe -m pip show flash-attn
 ```
 
@@ -280,7 +286,7 @@ cd ComfyUI_windows_portable
 uv example:
 
 ```bash
-uv pip install --python C:\Users\drbaph\Documents\ComfyUI\venv\Scripts\python.exe -r C:\Users\drbaph\Documents\ComfyUI\custom_nodes\Pixal3D-ComfyUI\requirements.txt
+uv pip install --python C:\path\to\ComfyUI\venv\Scripts\python.exe -r C:\path\to\ComfyUI\custom_nodes\Pixal3D-ComfyUI\requirements.txt
 ```
 
 If you use package-style install instead of requirements files, `pip install .` and `uv pip install .` install the same baseline runtime dependencies from `pyproject.toml`, including plain `natten==0.21.6`. CUDA wheels still remain manual or opt-in because they must match the exact stack.
@@ -375,7 +381,7 @@ Pixal3D Export GLB glb_path
 <details>
 <summary>VRAM Modes</summary>
 
-`dynamic_vram` is the default loader mode. Pixal3D-ComfyUI builds Pixal3D with Comfy/Aimdo-aware `Linear`, `Conv`, `LayerNorm`, `GroupNorm`, and `Embedding` ops where possible, then wraps the pipeline in ComfyUI's `CoreModelPatcher`. This is the closest mode to a native Aimdo/HiDream-style load path.
+`dynamic_vram` is the default loader mode. Pixal3D-ComfyUI builds Pixal3D with Comfy/Aimdo-aware `Linear`, `Conv`, `LayerNorm`, `GroupNorm`, and `Embedding` ops where possible, then wraps the pipeline in ComfyUI's model-management path.
 
 Pixal3D-ComfyUI keeps one active pipeline cache. Changing Model Loader settings such as `vram_mode`, `attention_backend`, helper-model toggles, or NAF settings unloads and destroys the previous handle before loading the new one. The **Pixal3D Unload Model** node also removes the active handle from the Python cache. Pixal3D-ComfyUI also hooks ComfyUI's global unload button so native unloads clear the Pixal3D cache too.
 
@@ -384,9 +390,6 @@ Task Manager may still show some RAM held after unload because Python, PyTorch, 
 Pixal3D is still not fully Comfy-native: it has custom sparse kernel modules and large temporary tensors that Aimdo cannot virtualize like a normal Comfy UNet. If Comfy still reports a large `Force pre-loaded` value or a 1536 run OOMs, use `native_low_vram` as the fallback. That mode bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU only when needed. In that mode the background remover is moved to GPU only for preprocessing and then returned to CPU, MoGe is moved to GPU only for camera estimation and then returned to CPU, and the upstream Pixal3D pipeline stages its flow/decoder modules one at a time.
 
 Use `full_gpu` only when you want the whole model resident on the GPU and your card has enough free VRAM.
-
-Implementation detail: this follows the same Comfy pattern as HiDream O1 - a real `torch.nn.Module` wrapper, `CoreModelPatcher`, and `model_management.load_models_gpu(...)` before inference. The wrapper exposes `dynamic_vbars` as a dict-shaped attribute so `ComfyUI-MemoryVisualization` can inspect it safely when Aimdo is active.
-
 </details>
 
 <details>
@@ -405,8 +408,10 @@ Implementation detail: this follows the same Comfy pattern as HiDream O1 - a rea
 
 ## Windows CUDA Wheel Resources
 
-- [Wildminder/AI-windows-whl](https://huggingface.co/Wildminder/AI-windows-whl/tree/main) — prebuilt Windows CUDA wheels (FlashAttention, flex_gemm, cumesh, o_voxel, drtk, etc.)
-- [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) — prebuilt Windows CUDA NATTEN/libnatten wheels for strict NAF support
+- [PozzettiAndrea/cuda-wheels](https://github.com/PozzettiAndrea/cuda-wheels/releases) — direct Windows wheels for `flex_gemm_ap`, `cumesh_vb`, `o_voxel_vb_ap`, `drtk`, and some `flash_attn` builds.
+- [visualbruno/ComfyUI-Trellis2 wheels](https://github.com/visualbruno/ComfyUI-Trellis2/tree/pixal3d/wheels/Windows) — alternate Windows wheels for `flex_gemm`, `cumesh`, `o_voxel`, `nvdiffrast`, `nvdiffrec_render`, and some NATTEN builds.
+- [Wildminder/AI-windows-whl](https://huggingface.co/Wildminder/AI-windows-whl/tree/main) — Windows AI wheel index, especially useful for FlashAttention and related AI packages.
+- [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) — Windows NATTEN wheels where available; strict NAF still requires `natten.HAS_LIBNATTEN == True`.
 
 ## 🤗 Acknowledgements
 

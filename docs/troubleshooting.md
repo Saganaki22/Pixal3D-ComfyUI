@@ -354,7 +354,7 @@ Task Manager can still show high RAM after this because Python, PyTorch, memory-
 
 Pixal3D loads checkpoints through CPU RAM first, then moves modules to GPU when they run. That is normal PyTorch/Hugging Face behavior. The heavy part is that the Pixal3D pipeline contains several large stages at once: sparse structure, shape 512, shape 1024/1536, texture, decoders, plus four DINOv3 projection feature extractors.
 
-Use `vram_mode=dynamic_vram` first on a 32GB card. Pixal3D-ComfyUI builds standard Pixal3D layers with Comfy/Aimdo-aware ops where possible, which is the closest path to a native Aimdo/HiDream-style loader. Pixal3D is still not a fully Comfy-native model, so custom sparse modules and temporary tensors can still force-load or spike VRAM.
+Use `vram_mode=dynamic_vram` first on a 32GB card. Pixal3D-ComfyUI builds standard Pixal3D layers with Comfy/Aimdo-aware ops where possible, then wraps the pipeline in ComfyUI model management. Pixal3D is still not a fully Comfy-native model, so custom sparse modules and temporary tensors can still force-load or spike VRAM.
 
 If Comfy logs a large `Force pre-loaded` value or a 1536 run OOMs late in decode, switch to `vram_mode=native_low_vram`. That mode bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU one at a time and back to CPU afterwards. RMBG is staged only for background removal, MoGe is staged only for camera estimation, and Pixal3D's flow/decoder modules are staged by the upstream low-VRAM pipeline.
 
