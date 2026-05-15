@@ -20,7 +20,8 @@
 </div>
 
 <div align="center">
-    <img src="assets/teaser.png" alt="Teaser image of Pixal3D"/>
+   <img width="3840" height="2160" alt="teaser-jpeg" src="https://github.com/user-attachments/assets/80c31413-e51c-437f-9c5f-1c7fd7ee77f3" />
+
 </div>
 
 **Pixal3D** generates high-fidelity 3D assets from a single image. Unlike previous methods that loosely inject image features via attention, Pixal3D explicitly lifts pixel features into 3D through back-projection, establishing direct pixel-to-3D correspondences. This enables near-reconstruction-level fidelity with detailed geometry and PBR textures.
@@ -41,6 +42,9 @@
 [![License](https://img.shields.io/badge/License-see%20LICENSE-lightgrey)](LICENSE)
 
 [中文说明](README_ZH.md) | [Compatibility](docs/compatibility_matrix.md) | [Portable Install](docs/portable_standalone_install.md) | [Windows Wheels](docs/windows_wheels.md) | [Troubleshooting](docs/troubleshooting.md) | [Related Repos](docs/related_repos.md)
+
+<img width="2015" height="911" alt="Screenshot 2026-05-15 053837" src="https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa" />
+
 
 ## Features
 
