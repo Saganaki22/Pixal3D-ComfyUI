@@ -43,7 +43,12 @@
 
 [中文说明](README_ZH.md) | [Compatibility](docs/compatibility_matrix.md) | [Portable Install](docs/portable_standalone_install.md) | [Windows Wheels](docs/windows_wheels.md) | [Troubleshooting](docs/troubleshooting.md) | [Related Repos](docs/related_repos.md)
 
-<img width="2015" height="911" alt="Screenshot 2026-05-15 053837" src="https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa" width="1200"><br><br>
+
+  <img src="https://github.com/user-attachments/assets/a2ef8b6e-ff68-4a81-a595-1e84eab2062c" width="800">
+</p>
+
 
 
 ## Features
