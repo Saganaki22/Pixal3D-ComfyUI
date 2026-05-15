@@ -2,16 +2,16 @@
 
 This is a short map of useful nearby work. These repos are references for wheels and export behavior, not required runtime dependencies.
 
-## visualbruno/ComfyUI-Trellis2 pixal3d branch
+## visualbruno/ComfyUI-Trellis2
 
-Repo: https://github.com/visualbruno/ComfyUI-Trellis2/tree/pixal3d
+Repo: https://github.com/visualbruno/ComfyUI-Trellis2
 
 Useful part: the Windows wheel folder includes builds for `cumesh`, `flex_gemm`, `o_voxel`, `nvdiffrast`, `nvdiffrec_render`, and some NATTEN wheels.
 
 Wheel folder:
 
 ```text
-https://github.com/visualbruno/ComfyUI-Trellis2/tree/pixal3d/wheels/Windows
+https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels
 ```
 
 Important limitation: do not install a wheel just because the Python tag matches. It also has to match the Torch and CUDA ABI.

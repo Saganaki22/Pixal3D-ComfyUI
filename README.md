@@ -409,7 +409,7 @@ Use `full_gpu` only when you want the whole model resident on the GPU and your c
 ## Windows CUDA Wheel Resources
 
 - [PozzettiAndrea/cuda-wheels](https://github.com/PozzettiAndrea/cuda-wheels/releases) — direct Windows wheels for `flex_gemm_ap`, `cumesh_vb`, `o_voxel_vb_ap`, `drtk`, and some `flash_attn` builds.
-- [visualbruno/ComfyUI-Trellis2 wheels](https://github.com/visualbruno/ComfyUI-Trellis2/tree/pixal3d/wheels/Windows) — alternate Windows wheels for `flex_gemm`, `cumesh`, `o_voxel`, `nvdiffrast`, `nvdiffrec_render`, and some NATTEN builds.
+- [visualbruno/ComfyUI-Trellis2 wheels](https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels) — alternate Windows wheels for `flex_gemm`, `cumesh`, `o_voxel`, `nvdiffrast`, `nvdiffrec_render`, and some NATTEN builds.
 - [Wildminder/AI-windows-whl](https://huggingface.co/Wildminder/AI-windows-whl/tree/main) — Windows AI wheel index, especially useful for FlashAttention and related AI packages.
 - [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) — Windows NATTEN wheels where available; strict NAF still requires `natten.HAS_LIBNATTEN == True`.
 

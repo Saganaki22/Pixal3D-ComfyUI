@@ -102,10 +102,10 @@ venv\Scripts\python.exe -m pip install -U "triton-windows<3.7"
 
 ## visualbruno Wheel Folder
 
-visualbruno's Pixal3D branch has a useful Windows wheel folder:
+visualbruno's ComfyUI-Trellis2 repo has a useful wheel folder:
 
 ```text
-https://github.com/visualbruno/ComfyUI-Trellis2/tree/pixal3d/wheels/Windows
+https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels
 ```
 
 Important folders:
