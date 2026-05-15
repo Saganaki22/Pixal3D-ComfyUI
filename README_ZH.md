@@ -134,7 +134,8 @@ MoGe 下载地址：[Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe)。
 | Pixal3D Export GLB | `texture_size` | `4096` |
 | Pixal3D Export GLB | `remesh` | 默认 `true`，节点会按设置传给 o_voxel；如果网格碎裂可改为 `false` |
 
-## NAF 和 NATTEN
+<details>
+<summary>NAF 和 NATTEN</summary>
 
 上游 Pixal3D 使用 NAF 来提升 shape/texture 阶段的特征质量。NAF 需要 CUDA 版 NATTEN/libnatten。只有安装了匹配当前 Python/PyTorch/CUDA 的 NATTEN，并且：
 
@@ -154,7 +155,10 @@ pip install natten==0.21.6+torch2100cu130 -f https://whl.natten.org
 
 注意：官方 `whl.natten.org` 轮子主要面向 Linux/WSL。Windows 上如果 pip 装到 `natten-0.21.6-py3-none-any.whl`，它不包含 libnatten，不能启用 strict NAF。
 
-## GLB 导出
+</details>
+
+<details>
+<summary>GLB 导出</summary>
 
 导出的 GLB 写入：
 
@@ -173,7 +177,10 @@ Pixal3D Export GLB glb_path
 
 **Pixal3D Image To 3D** 现在只输出 `pixal3d_result`，再接到 **Pixal3D Export GLB**。原生 3D 预览请使用导出的 `glb_path`。
 
-## 常见问题
+</details>
+
+<details>
+<summary>常见问题</summary>
 
 如果模型文件下载成 `blobs` 或 Hugging Face cache 结构，不要直接把 blob 文件夹当模型路径。Pixal3D-ComfyUI 期望正常文件夹和正常文件名，例如 `.safetensors`、`pipeline.json`、`ckpts/*.safetensors`。
 
@@ -186,6 +193,8 @@ Pixal3D Export GLB glb_path
 如果切换 `vram_mode`、`attention_backend` 或其他 Model Loader 设置，新版节点会卸载旧的 Pixal3D cache handle。ComfyUI 原生 unload 主要释放 VRAM；如果想立刻释放 Pixal3D 的 CPU RAM，请运行 **Pixal3D Unload Model** 节点，或重启 ComfyUI。
 
 `native_low_vram` 模式会尽量分阶段移动模型：RMBG 只在背景预处理时上 GPU，MoGe 只在相机估计时上 GPU，之后都会回到 CPU；Pixal3D 主流程则按上游 low-vram 逻辑逐个移动 flow/decoder 模块。
+
+</details>
 
 ## Windows CUDA 轮子资源
 

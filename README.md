@@ -96,7 +96,8 @@ For the smoothest full upstream Pixal3D experience, Linux or WSL is recommended 
 
 Native Windows is supported and can generate/export GLBs, but it may need fallback settings unless exact Windows CUDA wheels exist for your stack. In particular, for Python 3.12 + PyTorch 2.10 + CUDA 13.0, there is currently no known official `win_amd64` NATTEN/libnatten wheel for `natten==0.21.6+torch2100cu130`. Plain `natten==0.21.6` is installed for baseline imports, but if `natten.HAS_LIBNATTEN` is `False`, use `naf_mode=fallback_if_missing` instead of `strict`.
 
-## Guarded Installer Policy
+<details>
+<summary>Guarded Installer Policy</summary>
 
 Some 3D ComfyUI nodes use `comfy-env` with `install.py`, `prestartup_script.py`, and `comfy-env.toml` to build isolated CUDA environments automatically. That can be convenient, but it depends on the wheel map matching the user's exact stack.
 
@@ -109,6 +110,8 @@ Pixal3D-ComfyUI keeps the risky parts explicit:
 - Normal `pip` and `uv` installs for runtime requirements
 
 This makes it less automatic, but safer for custom ComfyUI installs, portable ComfyUI, newer PyTorch/CUDA stacks, and users who already have working FlashAttention/Triton wheels.
+
+</details>
 
 ## Compatibility
 
@@ -178,7 +181,8 @@ More setup detail:
 - [Related repo findings](docs/related_repos.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
-## Production Readiness
+<details>
+<summary>Production Readiness</summary>
 
 This nodepack is close to production for Windows CUDA users who already have matching extension wheels installed, but it is not a one-click package for every environment. Release readiness depends on these checks:
 
@@ -194,6 +198,8 @@ This nodepack is close to production for Windows CUDA users who already have mat
 | Fresh-machine smoke test | Recommended before tagging a production release |
 
 Run **Pixal3D Environment Check** first. A production-capable Windows install must show the required CUDA modules importing in the same Python environment that launches ComfyUI.
+
+</details>
 
 ## Model Setup
 
@@ -357,7 +363,8 @@ Pixal3D Export GLB glb_path
   -> Preview 3D & Animation model_file
 ```
 
-## VRAM Modes
+<details>
+<summary>VRAM Modes</summary>
 
 `dynamic_vram` is the default loader mode. Pixal3D-ComfyUI builds Pixal3D with Comfy/Aimdo-aware `Linear`, `Conv`, `LayerNorm`, `GroupNorm`, and `Embedding` ops where possible, then wraps the pipeline in ComfyUI's `CoreModelPatcher`. This is the closest mode to a native Aimdo/HiDream-style load path.
 
@@ -371,7 +378,10 @@ Use `full_gpu` only when you want the whole model resident on the GPU and your c
 
 Implementation detail: this follows the same Comfy pattern as HiDream O1 - a real `torch.nn.Module` wrapper, `CoreModelPatcher`, and `model_management.load_models_gpu(...)` before inference. The wrapper exposes `dynamic_vbars` as a dict-shaped attribute so `ComfyUI-MemoryVisualization` can inspect it safely when Aimdo is active.
 
-## Safety Notes
+</details>
+
+<details>
+<summary>Safety Notes</summary>
 
 - No packages are installed into system Python.
 - `install.py` uses the Python that launches it; use ComfyUI's Python or portable `python_embeded`.
@@ -381,6 +391,8 @@ Implementation detail: this follows the same Comfy pattern as HiDream O1 - a rea
 - `download_if_missing` is off by default.
 - Pixal3D source imports are lazy; the heavy model code loads only when the loader node runs.
 - CUDA module aliases for `cumesh`, `flex_gemm`, and `o_voxel` are created only when Pixal3D loads, and point at the installed wheel modules.
+
+</details>
 
 ## Windows CUDA Wheel Resources
 
