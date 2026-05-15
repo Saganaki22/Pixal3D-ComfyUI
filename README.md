@@ -59,6 +59,7 @@
 - `auto` attention mode picks FlashAttention 3 when installed, otherwise FlashAttention 2
 - ComfyUI model management, unload, DynamicVRAM, and Aimdo/MemoryVisualization visibility
 - Native low-VRAM Pixal3D mode for staged CPU/GPU movement
+- **Pixal3D Camera Control** node for manual FOV, distance, and mesh-scale setup with Scene/POV preview
 - GLB path output connects directly to ComfyUI's native **Preview 3D & Animation**
 
 ## Installation
@@ -108,6 +109,25 @@ python install.py --install-known-cuda
 ```
 
 If your stack is not in the bundled wheel map, install matching wheels or source builds manually from [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md) or [Windows wheel guide](docs/windows_wheels.md).
+
+### What Am I Missing?
+
+Run **Pixal3D Environment Check** first. Match the first missing line to this table:
+
+| Environment Check says | What it means | What to do |
+|---|---|---|
+| `flash_attn: MISSING` and `flash_attn_interface: MISSING` | Attention backend is missing | Install a matching FlashAttention 2 or 3 wheel for your Python/PyTorch/CUDA/OS |
+| `flex_gemm_ap: MISSING` and `flex_gemm: MISSING` | Pixal3D sparse GEMM extension is missing | Install/build matching `flex_gemm_ap` or `flex_gemm` |
+| `cumesh_vb: MISSING` and `cumesh: MISSING` | Pixal3D mesh extension is missing | Install/build matching `cumesh_vb` or `cumesh` |
+| `o_voxel_vb_ap: MISSING` and `o_voxel: MISSING` | Pixal3D voxel/remesh extension is missing | Install/build matching `o_voxel_vb_ap` or `o_voxel` |
+| `drtk: MISSING` | DRTK renderer dependency is missing | Install/build matching `drtk` |
+| `nvdiffrast: MISSING` or `nvdiffrec_render: MISSING` | Optional renderer packages are missing | Install only if your workflow needs those renderer paths; basic GLB export can work without them |
+| `natten: MISSING` | Baseline NATTEN import is missing | Reinstall `requirements.txt` or run `pip install natten==0.21.6` in ComfyUI's Python |
+| `natten.HAS_LIBNATTEN: False` | NATTEN imports, but strict CUDA NAF is not available | Use `naf_mode=fallback_if_missing`, or install/build CUDA NATTEN/libnatten for your stack |
+| `RMBG-2.0` missing or gated | Background remover weights are unavailable | Request access to [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0), download it, or use transparent PNG/WebP with `background_mode=keep_alpha` |
+| MoGe missing | Automatic camera estimator weights are unavailable | Download [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe), or use `camera_mode=manual` with **Pixal3D Camera Control** |
+
+Windows users: start with [Windows wheel guide](docs/windows_wheels.md). Linux/WSL users: start with [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md). Do not let pip replace your working Torch install while fixing missing CUDA packages; use exact wheels or `--no-deps` where the guide says to.
 
 ### Platform Reality Check
 
