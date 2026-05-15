@@ -20,7 +20,8 @@
 </div>
 
 <div align="center">
-    <img src="assets/teaser.png" alt="Teaser image of Pixal3D"/>
+   <img width="3840" height="2160" alt="teaser-jpeg" src="https://github.com/user-attachments/assets/80c31413-e51c-437f-9c5f-1c7fd7ee77f3" />
+
 </div>
 
 **Pixal3D** generates high-fidelity 3D assets from a single image. Unlike previous methods that loosely inject image features via attention, Pixal3D explicitly lifts pixel features into 3D through back-projection, establishing direct pixel-to-3D correspondences. This enables near-reconstruction-level fidelity with detailed geometry and PBR textures.
@@ -32,6 +33,12 @@
 [English README](README.md) | [兼容性矩阵](docs/compatibility_matrix.md) | [便携版/独立版安装](docs/portable_standalone_install.md) | [Windows 轮子指南](docs/windows_wheels.md) | [故障排查](docs/troubleshooting.md)
 
 Pixal3D-ComfyUI 是 TencentARC Pixal3D 的 ComfyUI 节点封装，用于从单张图片生成带贴图的 3D 模型，并导出 `.glb` 文件。节点支持 FlashAttention 2/3 选择、ComfyUI DynamicVRAM/Aimdo 管理、原生 ComfyUI MoGe 权重路径，以及 Windows CUDA 扩展轮子的手动安装流程。
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa" width="1200"><br><br>
+
+  <img src="https://github.com/user-attachments/assets/a2ef8b6e-ff68-4a81-a595-1e84eab2062c" width="800">
+</p>
 
 ## 安装
 
