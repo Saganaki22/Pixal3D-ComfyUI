@@ -48,6 +48,21 @@ Pixal3D-ComfyUI 是 TencentARC Pixal3D 的 ComfyUI 节点封装，用于从单�
 - ComfyUI 模型管理、卸载、DynamicVRAM、Aimdo/MemoryVisualization 可见性
 - `native_low_vram` 模式，按阶段在 CPU/GPU 之间移动模型
 - **Pixal3D Camera Control** 节点：手动控制 FOV、distance、mesh scale，并提供 Scene/POV 预览
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/8b53ffe6-115c-4ab2-9170-dc7e8f0e69aa" width="350"><br>
+      <b>scene</b>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/ba6e7a92-89c8-449c-a81a-79a6d67c6011" width="350"><br>
+      <b>POV</b>
+    </td>
+  </tr>
+</table>
+
+
 - `glb_path` 可直接连接到 ComfyUI 原生 **Preview 3D & Animation**
 
 ## 安装
