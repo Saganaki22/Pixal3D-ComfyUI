@@ -21,7 +21,7 @@ dependencies = [
   "scipy",
   "timm",
   "tqdm",
-  "transformers>=4.56.0,<5",
+  "transformers>=4.56.0,<5.4",
   "trimesh[easy]",
   "utils3d",
   "moge @ git+https://github.com/microsoft/MoGe.git@07444410f1e33f402353b99d6ccd26bd31e469e8",
