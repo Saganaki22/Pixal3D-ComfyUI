@@ -144,7 +144,7 @@ Windows 用户先看 [Windows 轮子指南](docs/windows_wheels.md)。Linux/WSL 
 
 如果想尽量接近上游 Pixal3D 的完整体验，推荐 Linux 或 WSL，因为上游 NATTEN 为这些环境提供了近期官方 PyTorch CUDA 栈的 NATTEN/libnatten 预编译轮子。
 
-原生 Windows 也受支持，可以生成和导出 GLB，但如果缺少完全匹配当前环境的 Windows CUDA 轮子，就需要使用 fallback 设置。尤其是 Python 3.12 + PyTorch 2.10 + CUDA 13.0，目前没有已知的官方 `win_amd64` NATTEN/libnatten 轮子对应 `natten==0.21.6+torch2100cu130`。普通 `natten==0.21.6` 只保证基础导入；如果 `natten.HAS_LIBNATTEN` 是 `False`，请使用 `naf_mode=fallback_if_missing`，不要使用 `strict`。
+原生 Windows 也受支持，可以生成和导出 GLB，但如果缺少完全匹配当前环境的 Windows CUDA 轮子，就需要使用 fallback 设置。社区已有部分 Windows NATTEN 轮子（例如 [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64)，适用于 Python 3.12、PyTorch 2.10、CUDA 13.0、sm120/RTX 5090），但官方 NATTEN 轮子索引 `whl.natten.org` 目前只为 PyTorch 2.10/2.11 提供 Linux 构建。普通 `natten==0.21.6` 只保证基础导入；如果 `natten.HAS_LIBNATTEN` 是 `False`，请使用 `naf_mode=fallback_if_missing`，不要使用 `strict`。
 
 ## GPU 计算能力
 
@@ -153,7 +153,7 @@ Windows 用户先看 [Windows 轮子指南](docs/windows_wheels.md)。Linux/WSL 
 | `sm80`-`sm89` | Ampere (A100, RTX 3090)、Ada Lovelace (RTX 4090) | 完全支持，FlashAttention 2/3 和 NATTEN/libnatten 轮子可用 |
 | `sm90` | Hopper (H100) | 完全支持，轮子可用性与 Ampere/Ada 相同 |
 | `sm100` | Blackwell (B200) | 预期支持，FlashAttention 2/3 轮子应可用，请验证 NATTEN/libnatten |
-| `sm120` | Blackwell 消费级 (RTX 5090) | **可用但无 strict NAF。** FlashAttention 2/3 轮子可用，但目前没有 `sm120` 的预编译 NATTEN/libnatten 轮子。请使用 `naf_mode=fallback_if_missing`。 |
+| `sm120` | Blackwell 消费级 (RTX 5090) | **可用，社区 NATTEN 轮子已有部分构建。** FlashAttention 2/3 轮子可用。[drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) 提供 Python 3.12 + PyTorch 2.10 + CUDA 13.0 的 sm120 轮子。如果轮子不匹配你的环境，仍可使用 `naf_mode=fallback_if_missing`。 |
 
 Linux 或 WSL 是获得完整 NAF 支持的最佳方式，因为上游 NATTEN 在这些平台上发布了预编译轮子。原生 Windows 上，即使 `sm80`-`sm100` 也可能需要 fallback 设置，除非存在精确匹配当前 Python/PyTorch/CUDA 栈的 `win_amd64` NATTEN 轮子。
 
@@ -300,6 +300,9 @@ Pixal3D Export GLB glb_path
 
 - [Wildminder/AI-windows-whl](https://huggingface.co/Wildminder/AI-windows-whl/tree/main) — 预编译 Windows CUDA 轮子（FlashAttention、flex_gemm、cumesh、o_voxel、drtk 等）
 - [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) — 预编译 Windows CUDA NATTEN/libnatten 轮子，用于 strict NAF 支持
+- [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) — Windows NATTEN 0.21.6 轮子，Python 3.12、PyTorch 2.10、CUDA 13.0、sm120 (RTX 5090)
+- [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) — Windows NATTEN 0.21.6 轮子，Python 3.12、CUDA 12.8、Blackwell (sm100/sm120)
+- [在 Windows 上编译 NATTEN](docs/Build_Natten_windows.md) — 从源码编译 NATTEN 的完整指南，包括 MSVC 和 CUDA 修复
 
 ## 🤗 致谢
 

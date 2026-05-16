@@ -171,7 +171,7 @@ Windows users: start with [Windows wheel guide](docs/windows_wheels.md). Linux/W
 
 For the smoothest full upstream Pixal3D experience, Linux or WSL is recommended because upstream NATTEN publishes prebuilt NATTEN/libnatten wheels for recent official PyTorch CUDA stacks there.
 
-Native Windows is supported and can generate/export GLBs, but it may need fallback settings unless exact Windows CUDA wheels exist for your stack. In particular, for Python 3.12 + PyTorch 2.10 + CUDA 13.0, there is currently no known official `win_amd64` NATTEN/libnatten wheel for `natten==0.21.6+torch2100cu130`. Plain `natten==0.21.6` is installed for baseline imports, but if `natten.HAS_LIBNATTEN` is `False`, use `naf_mode=fallback_if_missing` instead of `strict`.
+Native Windows is supported and can generate/export GLBs, but it may need fallback settings unless exact Windows CUDA wheels exist for your stack. Community Windows NATTEN wheels exist for some stacks (e.g. [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) for Python 3.12, PyTorch 2.10, CUDA 13.0, sm120/RTX 5090), but the official NATTEN wheel index at `whl.natten.org` only provides Linux builds for PyTorch 2.10/2.11. Plain `natten==0.21.6` is installed for baseline imports, but if `natten.HAS_LIBNATTEN` is `False`, use `naf_mode=fallback_if_missing` instead of `strict`.
 
 Recommended default:
 
@@ -507,6 +507,9 @@ Use `full_gpu` only when you want the whole model resident on the GPU and your c
 - [visualbruno/ComfyUI-Trellis2 wheels](https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels) — alternate Windows wheels for `flex_gemm`, `cumesh`, `o_voxel`, `nvdiffrast`, `nvdiffrec_render`, and some NATTEN builds.
 - [Wildminder/AI-windows-whl](https://huggingface.co/Wildminder/AI-windows-whl/tree/main) — Windows AI wheel index, especially useful for FlashAttention and related AI packages.
 - [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) — Windows NATTEN wheels where available; strict NAF still requires `natten.HAS_LIBNATTEN == True`.
+- [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) — Windows NATTEN 0.21.6 wheel for Python 3.12, PyTorch 2.10, CUDA 13.0, sm120 (RTX 5090).
+- [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) — Windows NATTEN 0.21.6 wheel for Python 3.12, CUDA 12.8, Blackwell (sm100/sm120).
+- [Building NATTEN on Windows](docs/Build_Natten_windows.md) — step-by-step guide for building NATTEN from source on Windows, including MSVC and CUDA fixes.
 
 ## 🤗 Acknowledgements
 

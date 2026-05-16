@@ -123,13 +123,42 @@ Do not install a wheel just because the Python tag matches. The package also has
 
 Official TencentARC Pixal3D uses NAF for the shape and texture stages, and NAF imports NATTEN. The released Pixal3D shape/texture weights expect 2048-channel projected features.
 
-For Windows Python 3.12, PyTorch 2.10, CUDA 13.0, there is currently no known `win_amd64` NATTEN wheel in the official NATTEN wheel index. The tag people look for is:
+`requirements.txt` installs plain `natten==0.21.6` as a baseline dependency, but if pip installs `natten-0.21.6-py3-none-any.whl`, that is not the CUDA extension build and will not satisfy strict NAF.
+
+### Community Windows NATTEN Wheels
+
+These community-built wheels provide CUDA-enabled NATTEN/libnatten for Windows. Use `--no-deps` to avoid pip changing your Torch:
+
+| Python | PyTorch | CUDA | GPU | Wheel |
+|---|---|---|---|---|
+| 3.12 | 2.10 | 13.0 | sm120 (RTX 5090) | [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) |
+| 3.12 | 2.8+ | 12.8 | Blackwell (sm100/sm120) | [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) |
+
+Install example:
+
+```bat
+venv\Scripts\python.exe -m pip install --no-deps "https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64/resolve/main/natten-0.21.6+torch2100cu130-cp312-cp312-win_amd64.whl"
+```
+
+After installing, verify:
+
+```bat
+venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
+```
+
+`HAS_LIBNATTEN` must be `True` for strict NAF. If it is `False`, set `naf_mode=fallback_if_missing`.
+
+Also see [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) and [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) for additional community Windows NATTEN wheels where available.
+
+### Official NATTEN Wheel Index
+
+The tag people look for:
 
 ```bat
 natten==0.21.6+torch2100cu130
 ```
 
-At the time of writing, `https://whl.natten.org` provides that tag for Linux, not Windows. `requirements.txt` installs plain `natten==0.21.6` as a baseline dependency, but if pip installs `natten-0.21.6-py3-none-any.whl`, that is not the CUDA extension build and will not satisfy strict NAF.
+At the time of writing, `https://whl.natten.org` provides that tag for Linux, not Windows.
 
 Pixal3D-ComfyUI defaults to `naf_mode=fallback_if_missing`, which keeps the 2048-channel tensor shape by duplicating DINO projection features when CUDA NATTEN/NAF is unavailable. For exact upstream NAF behavior, install a matching CUDA-enabled NATTEN wheel and set `naf_mode=strict`.
 
@@ -146,9 +175,9 @@ Official NATTEN wheel commands from `https://whl.natten.org`:
 
 Notes:
 
-- The official index describes these as x86-64/aarch64 builds, but the current wheel files for PyTorch 2.10/2.11 are Linux wheels. On Windows, pip will reject them because they are not `win_amd64`.
+- The official index describes these as x86-64/aarch64 builds, but the current wheel files for PyTorch 2.10/2.11 are Linux wheels. On Windows, pip will reject them because they are not `win_amd64`. Community Windows wheels may be available — see the community table above.
 - For CUDA 12.6 builds, Blackwell FNA/FMHA kernels are not available. Blackwell support starts with CUDA Toolkit 12.8.
-- For Windows Python 3.12 + Torch 2.10 + CUDA 13.0, do not change Python or Torch just to chase NATTEN. Use `naf_mode=fallback_if_missing` unless a real matching Windows NATTEN wheel is found or a local source build succeeds.
+- For Windows Python 3.12 + Torch 2.10 + CUDA 13.0, check the community wheel table above for a matching `win_amd64` NATTEN wheel. If no matching wheel is available for your GPU architecture, use `naf_mode=fallback_if_missing` or try a local source build.
 - Use `--no-deps` when testing a NATTEN wheel inside an existing ComfyUI environment so pip does not change Torch:
 
 ```bat
@@ -165,9 +194,15 @@ venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_
 
 `comfy-sparse-attn==0.0.9` from ComfyUI-TRELLIS2 is not a replacement for NATTEN or NAF. It provides sparse/variable-length attention dispatch and helper namespace links for ComfyUI sparse primitives. It does not provide NATTEN's neighborhood attention API or CUDA `libnatten`, so it cannot enable `naf_mode=strict`.
 
-## Native Windows NATTEN Build Attempt
+## Native Windows NATTEN Build
 
-Native Windows builds are not regularly tested by NATTEN upstream. This is the right shape of the build environment if you want to try anyway.
+If no community wheel matches your stack, you can build NATTEN from source on Windows. See the dedicated guide:
+
+**[Building NATTEN on Windows](Build_Natten_windows.md)**
+
+The guide covers prerequisites, MSVC fixes (`not` → `!`), `nvToolsExt` patches, `python3X.lib` issues, and the full build/install/verify flow.
+
+Legacy build notes (kept for reference):
 
 Open a normal Command Prompt and launch the MSVC developer environment:
 
