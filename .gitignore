@@ -12,7 +12,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-models/
+/models/
 output/
 temp/
 tmp/

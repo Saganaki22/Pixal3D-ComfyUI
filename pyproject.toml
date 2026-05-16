@@ -1,7 +1,7 @@
 [project]
 name = "Pixal3D-ComfyUI"
 description = "ComfyUI custom nodes for TencentARC Pixal3D image-to-3D generation with GLB export, FlashAttention 2/3 selection, and ComfyUI DynamicVRAM/Aimdo integration"
-version = "0.1.6"
+version = "0.1.7"
 license = {file = "LICENSE"}
 dependencies = [
   "accelerate>=1.13.0",
@@ -21,7 +21,7 @@ dependencies = [
   "scipy",
   "timm",
   "tqdm",
-  "transformers>=4.56.0",
+  "transformers>=4.56.0,<5",
   "trimesh[easy]",
   "utils3d",
   "moge @ git+https://github.com/microsoft/MoGe.git@07444410f1e33f402353b99d6ccd26bd31e469e8",
