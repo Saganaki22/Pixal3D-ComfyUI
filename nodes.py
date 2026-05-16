@@ -14,6 +14,7 @@ from .pixal3d_comfy import (
     environment_report,
     export_glb,
     load_pixal3d_model,
+    release_pixal3d_runtime_memory,
     run_pixal3d,
     tensor_to_pil,
 )
@@ -75,6 +76,8 @@ def _destroy_handle(handle) -> None:
             handle.offload()
     except Exception:
         LOGGER.warning("Failed to destroy stale Pixal3D model handle", exc_info=True)
+    finally:
+        _flush_pixal3d_runtime_memory()
 
 
 def _clear_model_cache(keep_key=None) -> int:
@@ -86,6 +89,15 @@ def _clear_model_cache(keep_key=None) -> int:
         _LOADED_MODELS.pop(key, None)
         cleared += 1
     return cleared
+
+
+def _flush_pixal3d_runtime_memory() -> None:
+    try:
+        _prune_stale_comfy_loaded_models()
+        release_pixal3d_runtime_memory(aggressive=True)
+        _prune_stale_comfy_loaded_models()
+    except Exception:
+        LOGGER.debug("Could not fully flush Pixal3D runtime memory", exc_info=True)
 
 
 def _prune_stale_comfy_loaded_models() -> int:
@@ -160,6 +172,7 @@ def _install_global_unload_hook() -> None:
             result = original(*args, **kwargs)
         finally:
             cleared = _clear_model_cache()
+            _flush_pixal3d_runtime_memory()
             _prune_stale_comfy_loaded_models()
             if cleared:
                 LOGGER.info("Cleared %s Pixal3D cached model handle(s) after ComfyUI global unload.", cleared)
@@ -231,7 +244,10 @@ class Pixal3DModelLoader:
             pixal3d_repo_path,
         )
         if force_reload or key not in _LOADED_MODELS:
-            _clear_model_cache()
+            cleared = _clear_model_cache()
+            _flush_pixal3d_runtime_memory()
+            if cleared:
+                LOGGER.info("Cleared %s Pixal3D cached model handle(s) before loading changed settings.", cleared)
             _LOADED_MODELS[key] = load_pixal3d_model(
                 model_repo=model_repo.strip() or DEFAULT_MODEL_REPO,
                 moge_repo=native_moge_repo,
@@ -248,6 +264,7 @@ class Pixal3DModelLoader:
             )
         else:
             _clear_model_cache(keep_key=key)
+            _flush_pixal3d_runtime_memory()
         return (_LOADED_MODELS[key],)
 
 
@@ -443,6 +460,7 @@ class Pixal3DUnloadModel:
                 _LOADED_MODELS.pop(key, None)
                 removed += 1
         _destroy_handle(model)
+        _flush_pixal3d_runtime_memory()
         suffix = f" ({removed} cached handle removed)" if removed else ""
         return {"ui": {"text": [f"Pixal3D model unloaded from VRAM and Python cache{suffix}"]}, "result": ()}
 

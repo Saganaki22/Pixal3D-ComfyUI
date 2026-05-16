@@ -108,47 +108,105 @@ IMAGE_COND_CONFIGS = {
 
 @contextmanager
 def _temporary_comfy_ops(enabled: bool):
-    if not enabled:
-        yield
-        return
-
-    import comfy.ops
     import comfy.memory_management
 
-    ops = comfy.ops.manual_cast
-    replacements = {
-        "Linear": ops.Linear,
-        "Conv1d": ops.Conv1d,
-        "Conv2d": ops.Conv2d,
-        "Conv3d": ops.Conv3d,
-        "BatchNorm2d": ops.BatchNorm2d,
-        "GroupNorm": ops.GroupNorm,
-        "LayerNorm": ops.LayerNorm,
-        "ConvTranspose1d": ops.ConvTranspose1d,
-        "ConvTranspose2d": ops.ConvTranspose2d,
-        "Embedding": ops.Embedding,
-    }
     originals = {}
-    for name, replacement in replacements.items():
-        if hasattr(torch.nn, name):
-            originals[name] = getattr(torch.nn, name)
-            setattr(torch.nn, name, replacement)
+    original_aimdo_enabled = getattr(comfy.memory_management, "aimdo_enabled", None)
+
+    if enabled:
+        import comfy.ops
+
+        ops = comfy.ops.manual_cast
+        replacements = {
+            "Linear": ops.Linear,
+            "Conv1d": ops.Conv1d,
+            "Conv2d": ops.Conv2d,
+            "Conv3d": ops.Conv3d,
+            "BatchNorm2d": ops.BatchNorm2d,
+            "GroupNorm": ops.GroupNorm,
+            "LayerNorm": ops.LayerNorm,
+            "ConvTranspose1d": ops.ConvTranspose1d,
+            "ConvTranspose2d": ops.ConvTranspose2d,
+            "Embedding": ops.Embedding,
+        }
+        for name, replacement in replacements.items():
+            if hasattr(torch.nn, name):
+                originals[name] = getattr(torch.nn, name)
+                setattr(torch.nn, name, replacement)
 
     # Pixal3D constructors inspect parameters before load_state_dict runs.
     # Comfy's Windows lazy init can temporarily create no-parameter layers,
-    # which breaks those constructors. Keep Comfy-aware layer classes, but use
-    # normal parameter allocation during construction/loading.
-    original_aimdo_enabled = getattr(comfy.memory_management, "aimdo_enabled", None)
+    # which breaks those constructors. Suppress that lazy init for every
+    # Pixal3D load mode because previously imported Pixal3D classes may still
+    # inherit Comfy's patched torch.nn bases after switching modes.
     if original_aimdo_enabled is not None:
         comfy.memory_management.aimdo_enabled = False
 
     try:
+        _refresh_pixal3d_precision_module_types()
         yield
     finally:
         if original_aimdo_enabled is not None:
             comfy.memory_management.aimdo_enabled = original_aimdo_enabled
         for name, original in originals.items():
             setattr(torch.nn, name, original)
+        _refresh_pixal3d_precision_module_types()
+
+
+def _refresh_pixal3d_precision_module_types() -> None:
+    try:
+        from torch.nn.modules.conv import Conv1d, Conv2d, Conv3d, ConvTranspose1d, ConvTranspose2d, ConvTranspose3d
+        from torch.nn.modules.linear import Linear
+        from pixal3d.modules import sparse as sparse_modules
+        from pixal3d.modules import utils as pixal3d_utils
+    except Exception:
+        return
+
+    module_types: list[type] = []
+
+    def add(module_type: Any) -> None:
+        if isinstance(module_type, type) and module_type not in module_types:
+            module_types.append(module_type)
+
+    for module_type in (
+        Linear,
+        Conv1d,
+        Conv2d,
+        Conv3d,
+        ConvTranspose1d,
+        ConvTranspose2d,
+        ConvTranspose3d,
+    ):
+        add(module_type)
+    for name in (
+        "Linear",
+        "Conv1d",
+        "Conv2d",
+        "Conv3d",
+        "ConvTranspose1d",
+        "ConvTranspose2d",
+        "ConvTranspose3d",
+    ):
+        add(getattr(torch.nn, name, None))
+    for name in ("SparseConv3d", "SparseInverseConv3d", "SparseLinear"):
+        add(getattr(sparse_modules, name, None))
+    try:
+        import comfy.ops
+
+        manual_cast_ops = comfy.ops.manual_cast
+        for name in (
+            "Linear",
+            "Conv1d",
+            "Conv2d",
+            "Conv3d",
+            "ConvTranspose1d",
+            "ConvTranspose2d",
+        ):
+            add(getattr(manual_cast_ops, name, None))
+    except Exception:
+        pass
+
+    pixal3d_utils.MIX_PRECISION_MODULES = tuple(module_types)
 
 
 def _repo_root() -> Path:
@@ -1105,8 +1163,7 @@ class Pixal3DHandle:
                 if not unloaded:
                     patcher.detach()
         finally:
-            prune_stale_loaded_models()
-            _release_cached_memory()
+            release_pixal3d_runtime_memory()
 
     def destroy(self) -> None:
         if self.destroyed:
@@ -1124,7 +1181,7 @@ class Pixal3DHandle:
                 except Exception:
                     pass
             self.destroyed = True
-            _release_cached_memory(aggressive=True)
+            release_pixal3d_runtime_memory(aggressive=True)
 
 
 @dataclass
@@ -1169,6 +1226,11 @@ def prune_stale_loaded_models() -> None:
                 loaded.remove(loaded_model)
             except ValueError:
                 pass
+
+
+def release_pixal3d_runtime_memory(aggressive: bool = False) -> None:
+    prune_stale_loaded_models()
+    _release_cached_memory(aggressive=aggressive)
 
 
 def remove_loaded_model_entries_for_patcher(patcher) -> bool:

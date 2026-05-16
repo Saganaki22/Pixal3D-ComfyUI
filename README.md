@@ -206,7 +206,7 @@ The node is **not pinned to one tiny stack**. It should work on any Python/PyTor
 | Component | Supported range | Notes |
 |-----------|-----------------|-------|
 | VRAM | **20–32 GB recommended** | `1536_cascade` needs ~32 GB; `native_low_vram` can run on much lower VRAM in some workflows |
-| System RAM | **40–50 GB recommended for native low-VRAM** | Pixal3D stages large CPU-side tensors before GPU transfer |
+| System RAM | **20–40 GB recommended for native low-VRAM** | Pixal3D stages large CPU-side tensors before GPU transfer |
 | OS | Windows and Linux CUDA supported; macOS import-only | macOS should not break ComfyUI import, but CUDA generation/export is not supported unless compatible deps exist |
 | Python | `3.10`-`3.13` expected if wheels exist, `3.12.1` target-friendly | Wheels must match the Python ABI, for example `cp312` for Python 3.12.x |
 | PyTorch | `2.8+` expected if wheels exist, including `2.10` | The extension wheels must match the installed Torch ABI/build |
@@ -469,7 +469,7 @@ Pixal3D-ComfyUI keeps one active pipeline cache. Changing Model Loader settings 
 
 Task Manager may still show some RAM held after unload because Python, PyTorch, memory-mapped safetensors, Hugging Face/Transformers imports, and Windows allocators can keep reserved pages for reuse. That is different from the Pixal3D model object still being referenced. A full ComfyUI restart is the only guaranteed way to return every reserved page to the OS immediately.
 
-Pixal3D is still not fully Comfy-native: it has custom sparse kernel modules and large temporary tensors that Aimdo cannot virtualize like a normal Comfy UNet. If Comfy still reports a large `Force pre-loaded` value or a 1536 run OOMs, use `native_low_vram` as the fallback. That mode can run in low VRAM ranges such as **4–8 GB VRAM** for smaller workflows, but it needs a lot of host memory: plan for **40–50 GB system RAM** and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU only when needed. In that mode the background remover is moved to GPU only for preprocessing and then returned to CPU, MoGe is moved to GPU only for camera estimation and then returned to CPU, and the upstream Pixal3D pipeline stages its flow/decoder modules one at a time.
+Pixal3D is still not fully Comfy-native: it has custom sparse kernel modules and large temporary tensors that Aimdo cannot virtualize like a normal Comfy UNet. If Comfy still reports a large `Force pre-loaded` value or a 1536 run OOMs, use `native_low_vram` as the fallback. That mode can run in low VRAM ranges such as **4–8 GB VRAM** for smaller workflows, but it needs a lot of host memory: plan for **20–40 GB system RAM** and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU only when needed. In that mode the background remover is moved to GPU only for preprocessing and then returned to CPU, MoGe is moved to GPU only for camera estimation and then returned to CPU, and the upstream Pixal3D pipeline stages its flow/decoder modules one at a time.
 
 Recommended low-VRAM setup:
 

@@ -357,7 +357,7 @@ Pixal3D loads checkpoints through CPU RAM first, then moves modules to GPU when 
 
 Use `vram_mode=dynamic_vram` first on a 32GB card. Pixal3D-ComfyUI builds standard Pixal3D layers with Comfy/Aimdo-aware ops where possible, then wraps the pipeline in ComfyUI model management. Pixal3D is still not a fully Comfy-native model, so custom sparse modules and temporary tensors can still force-load or spike VRAM.
 
-If Comfy logs a large `Force pre-loaded` value or a 1536 run OOMs late in decode, switch to `vram_mode=native_low_vram`. That mode can run smaller workflows in low VRAM ranges such as 4-8 GB VRAM, but it trades that for much higher host memory use: plan for 40-50 GB system RAM and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU one at a time and back to CPU afterwards. RMBG is staged only for background removal, MoGe is staged only for camera estimation, and Pixal3D's flow/decoder modules are staged by the upstream low-VRAM pipeline.
+If Comfy logs a large `Force pre-loaded` value or a 1536 run OOMs late in decode, switch to `vram_mode=native_low_vram`. That mode can run smaller workflows in low VRAM ranges such as 4-8 GB VRAM, but it trades that for much higher host memory use: plan for 20-40 GB system RAM and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU one at a time and back to CPU afterwards. RMBG is staged only for background removal, MoGe is staged only for camera estimation, and Pixal3D's flow/decoder modules are staged by the upstream low-VRAM pipeline.
 
 Lowest-VRAM recipe:
 

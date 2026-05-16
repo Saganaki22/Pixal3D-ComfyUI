@@ -43,12 +43,36 @@ function getLinkedInputNode(node, inputName) {
     return app.graph?.getNodeById?.(link.origin_id) || null;
 }
 
+function imageValueToUrl(value) {
+    if (!value) return "";
+    let filename = "";
+    let type = "input";
+    let subfolder = "";
+
+    if (typeof value === "string") {
+        filename = value;
+    } else if (typeof value === "object") {
+        filename = value.filename || value.name || value.image || "";
+        type = value.type || type;
+        subfolder = value.subfolder || "";
+    }
+
+    if (!filename) return "";
+    const params = new URLSearchParams();
+    params.set("filename", filename);
+    params.set("type", type);
+    if (subfolder) params.set("subfolder", subfolder);
+    return `/view?${params.toString()}`;
+}
+
 function getLoadImageUrl(node) {
     const source = getLinkedInputNode(node, "image");
+    const previewImage = source?.imgs?.[0];
+    const previewSrc = previewImage?.currentSrc || previewImage?.src;
+    if (previewSrc) return previewSrc;
+
     const imageWidget = source?.widgets?.find((widget) => widget.name === "image");
-    const filename = imageWidget?.value;
-    if (!filename || typeof filename !== "string") return "";
-    return `/view?filename=${encodeURIComponent(filename)}&type=input`;
+    return imageValueToUrl(imageWidget?.value);
 }
 
 function injectCSS() {
@@ -171,6 +195,7 @@ class Pixal3DCameraUI {
     dragStart: any;
     image: HTMLImageElement;
     imageUrl: string;
+    imageFailed = false;
     container: HTMLElement | null = null;
     canvas: HTMLCanvasElement | null = null;
     readout: HTMLElement | null = null;
@@ -185,6 +210,7 @@ class Pixal3DCameraUI {
         this.node = node;
         this.dragStart = null;
         this.image = new Image();
+        this.image.decoding = "async";
         this.imageUrl = "";
         this.create();
         this.syncFromWidgets();
@@ -367,13 +393,21 @@ class Pixal3DCameraUI {
         const url = getLoadImageUrl(this.node);
         if (url && url !== this.imageUrl) {
             this.imageUrl = url;
-            this.image.onload = () => this.draw();
-            this.image.onerror = () => this.draw();
+            this.imageFailed = false;
+            this.image.onload = () => {
+                this.imageFailed = false;
+                this.draw();
+            };
+            this.image.onerror = () => {
+                this.imageFailed = true;
+                this.draw();
+            };
             this.image.src = url;
             return true;
         }
         if (!url && this.imageUrl) {
             this.imageUrl = "";
+            this.imageFailed = false;
             this.image.removeAttribute("src");
             return true;
         }
@@ -430,7 +464,8 @@ class Pixal3DCameraUI {
             ctx.fillStyle = "#758399";
             ctx.font = "12px Arial";
             ctx.textAlign = "center";
-            ctx.fillText(this.imageUrl ? "image loading" : label, x + width / 2, y + height / 2 + 4);
+            const text = this.imageFailed ? "image unavailable" : (this.imageUrl ? "image loading" : label);
+            ctx.fillText(text, x + width / 2, y + height / 2 + 4);
         }
         ctx.restore();
     }
@@ -509,7 +544,7 @@ class Pixal3DCameraUI {
         const frameH = height - 42;
         const cx = frameX + frameW / 2;
         const cy = frameY + frameH / 2;
-        const aspect = this.image.complete && this.image.naturalWidth > 0
+        const aspect = !this.imageFailed && this.image.complete && this.image.naturalWidth > 0
             ? this.image.naturalWidth / this.image.naturalHeight
             : 0.8;
         // Keep POV preview aligned with Pixal3D manual camera values.

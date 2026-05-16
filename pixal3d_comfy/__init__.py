@@ -11,6 +11,7 @@ from .runtime import (
     export_glb,
     load_pixal3d_model,
     pil_to_tensor,
+    release_pixal3d_runtime_memory,
     run_pixal3d,
     tensor_to_pil,
 )
@@ -28,6 +29,7 @@ __all__ = [
     "export_glb",
     "load_pixal3d_model",
     "pil_to_tensor",
+    "release_pixal3d_runtime_memory",
     "run_pixal3d",
     "tensor_to_pil",
 ]

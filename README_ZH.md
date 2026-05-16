@@ -138,7 +138,7 @@ Windows 用户先看 [Windows 轮子指南](docs/windows_wheels.md)。Linux/WSL 
 | 项目 | 要求 |
 |------|------|
 | 显存 (VRAM) | **推荐 20–32 GB**（`1536_cascade` 约需 32 GB；`native_low_vram` 在较小流程中可用到约 4–8 GB 显存） |
-| 内存 (RAM) | **native low-VRAM 推荐 40–50 GB**（Pixal3D 在传到 GPU 前会在 CPU 侧暂存大量张量） |
+| 内存 (RAM) | **native low-VRAM 推荐 20–40 GB**（Pixal3D 在传到 GPU 前会在 CPU 侧暂存大量张量） |
 
 ## 平台现实情况
 
@@ -279,7 +279,7 @@ Pixal3D Export GLB glb_path
 
 如果切换 `vram_mode`、`attention_backend` 或其他 Model Loader 设置，新版节点会卸载旧的 Pixal3D cache handle。ComfyUI 原生 unload 主要释放 VRAM；如果想立刻释放 Pixal3D 的 CPU RAM，请运行 **Pixal3D Unload Model** 节点，或重启 ComfyUI。
 
-`native_low_vram` 模式会尽量分阶段移动模型：小流程可能只需要约 4–8 GB 显存，但需要大量系统内存，建议准备 40–50 GB RAM，速度也会更慢。RMBG 只在背景预处理时上 GPU，MoGe 只在相机估计时上 GPU，之后都会回到 CPU；Pixal3D 主流程则按上游 low-vram 逻辑逐个移动 flow/decoder 模块。
+`native_low_vram` 模式会尽量分阶段移动模型：小流程可能只需要约 4–8 GB 显存，但需要大量系统内存，建议准备 20–40 GB RAM，速度也会更慢。RMBG 只在背景预处理时上 GPU，MoGe 只在相机估计时上 GPU，之后都会回到 CPU；Pixal3D 主流程则按上游 low-vram 逻辑逐个移动 flow/decoder 模块。
 
 低显存推荐设置：
 
