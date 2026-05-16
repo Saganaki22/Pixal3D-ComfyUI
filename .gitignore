@@ -26,3 +26,5 @@ tmp/
 
 autotune_cache.json
 *.log
+
+.claude/

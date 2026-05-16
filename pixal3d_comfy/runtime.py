@@ -59,9 +59,10 @@ DEFAULT_DINO_REPO = "camenduru/dinov3-vitl16-pretrain-lvd1689m"
 DEFAULT_REMBG_REPO = "briaai/RMBG-2.0"
 DEFAULT_MOGE_REPO = "Comfy-Org/MoGe"
 NATIVE_COMFY_MOGE_REPO = "Comfy-Org/MoGe"
+NATIVE_COMFY_MOGE_SUBDIR = "geometry_estimation"
 NATIVE_COMFY_MOGE_FILES = {
-    "moge_1_vitl_fp16.safetensors": "moge/moge_1_vitl_fp16.safetensors",
-    "moge_2_vitl_normal_fp16.safetensors": "moge/moge_2_vitl_normal_fp16.safetensors",
+    "moge_1_vitl_fp16.safetensors": "geometry_estimation/moge_1_vitl_fp16.safetensors",
+    "moge_2_vitl_normal_fp16.safetensors": "geometry_estimation/moge_2_vitl_normal_fp16.safetensors",
 }
 NATIVE_COMFY_MOGE_MODEL = "moge_2_vitl_normal_fp16.safetensors"
 ATTENTION_CHOICES = ["auto", "flash_attn_2", "flash_attn_3"]
@@ -374,7 +375,7 @@ def pixal3d_models_dir() -> Path:
 
 
 def moge_models_dir() -> Path:
-    models_dir = Path(folder_paths.models_dir) / "moge"
+    models_dir = Path(folder_paths.models_dir) / NATIVE_COMFY_MOGE_SUBDIR
     models_dir.mkdir(parents=True, exist_ok=True)
     try:
         folder_paths.add_model_folder_path("moge", str(models_dir))
@@ -631,23 +632,26 @@ def resolve_native_comfy_moge_path(
         repo_id = NATIVE_COMFY_MOGE_REPO
 
     target_dir = moge_models_dir()
-    required_path = target_dir / NATIVE_COMFY_MOGE_MODEL
+    legacy_dir = Path(folder_paths.models_dir) / "moge"
 
     if download_if_missing:
+        target_dir.mkdir(parents=True, exist_ok=True)
         for filename, remote_filename in NATIVE_COMFY_MOGE_FILES.items():
             destination = target_dir / filename
             if not destination.exists():
                 LOGGER.info("Downloading native ComfyUI MoGe file %s from %s to %s", remote_filename, repo_id, destination)
                 _download_hf_file_to_path(repo_id, remote_filename, destination, hf_endpoint)
 
-    if required_path.exists() and required_path.is_file():
-        return str(required_path)
+    for search_dir in (target_dir, legacy_dir):
+        required_path = search_dir / NATIVE_COMFY_MOGE_MODEL
+        if required_path.exists() and required_path.is_file():
+            return str(required_path)
 
     expected = "\n".join(str(target_dir / filename) for filename in NATIVE_COMFY_MOGE_FILES)
     raise FileNotFoundError(
         "Native ComfyUI MoGe is missing.\n"
         f"Download link: https://huggingface.co/{NATIVE_COMFY_MOGE_REPO}\n"
-        "Place the files directly in ComfyUI/models/moge, not in a Hugging Face snapshot folder:\n"
+        f"Place the files in ComfyUI/models/{NATIVE_COMFY_MOGE_SUBDIR}/, not in a Hugging Face snapshot folder:\n"
         f"{expected}\n"
         "Enable download_if_missing once to download these files automatically."
     )
