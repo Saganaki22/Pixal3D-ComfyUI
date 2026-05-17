@@ -12,7 +12,8 @@ ComfyUI Manager:
 
 1. Open **ComfyUI Manager**.
 2. Search for **Pixal3D** by **Saganaki22**.
-3. Install it, restart ComfyUI, then run **Pixal3D Environment Check**.
+3. Install the normal/stable entry. Do **not** install the Nightly node.
+4. Restart ComfyUI, then run **Pixal3D Environment Check**.
 
 Manual install:
 
