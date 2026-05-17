@@ -14,7 +14,7 @@ Run **Pixal3D Environment Check** first. It tells you which dependency is missin
 | `No module named natten` | NATTEN is not installed | Install `natten==0.21.6` or use fallback NAF mode |
 | `natten.HAS_LIBNATTEN=False` | NATTEN imports but has no CUDA libnatten | Use `naf_mode=fallback_if_missing`, `preload_naf=false`, or install/build CUDA NATTEN |
 | RMBG fails to download | `briaai/RMBG-2.0` is gated | Accept model terms, log in/set `HF_TOKEN`, or use transparent input with `keep_alpha` |
-| MoGe missing | Auto camera model missing | Put Comfy-Org/MoGe files in `ComfyUI/models/moge/`, or use manual camera mode |
+| MoGe missing | Auto camera model missing | Put Comfy-Org/MoGe files in `ComfyUI/models/geometry_estimation/`, or use manual camera mode |
 | GLB opens in Blender but not Windows 3D Viewer | Old WebP texture export | Re-export with current Pixal3D-ComfyUI PNG texture export |
 | Mesh is shards/point cloud | Remesh/decimation issue or bad cutout | Try `remesh=false`, `decimation_target=1000000`, clean transparent input |
 | RAM stays high after unload | Python/PyTorch reserved memory | Use Pixal3D Unload Model; restart ComfyUI to return all reserved memory |
@@ -86,7 +86,7 @@ ComfyUI/models/Pixal3D/TencentARC_Pixal3D/
 MoGe:
 
 ```text
-ComfyUI/models/moge/
+ComfyUI/models/geometry_estimation/
 ├── moge_1_vitl_fp16.safetensors
 └── moge_2_vitl_normal_fp16.safetensors
 ```

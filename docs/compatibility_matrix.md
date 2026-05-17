@@ -58,23 +58,23 @@ These are model files, not Python packages:
 |---|---|---|
 | Pixal3D | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/` | Main model, includes `ckpts/*.safetensors` |
 | DINOv3 | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/` | Needs `model.safetensors` |
-| MoGe | `ComfyUI/models/moge/` | Native ComfyUI MoGe from `https://huggingface.co/Comfy-Org/MoGe`; Pixal3D-ComfyUI uses `moge_2_vitl_normal_fp16.safetensors` |
+| MoGe | `ComfyUI/models/geometry_estimation/` | Native ComfyUI MoGe from `https://huggingface.co/Comfy-Org/MoGe`; Pixal3D-ComfyUI uses `moge_2_vitl_normal_fp16.safetensors` |
 | RMBG-2.0 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | Gated Hugging Face model; needed for `background_mode=auto_remove` |
 
 Preferred clean folder names are `owner_repo`. The Pixal3D/RMBG/DINO helpers also check common manual-download names like `Pixal3D`, `RMBG-2.0`, and Hugging Face cache-style folders like `models--owner--repo/snapshots/<hash>/`.
 
 Model folders may be normal directories, Windows junctions, or symlinks. The linked target must contain the normal model files; broken links or blob-only Hugging Face cache folders are treated as missing/incomplete models.
 
-Native ComfyUI MoGe files belong directly under `ComfyUI/models/moge/`:
+Native ComfyUI MoGe files belong directly under `ComfyUI/models/geometry_estimation/`:
 
 ```text
 moge_1_vitl_fp16.safetensors
 moge_2_vitl_normal_fp16.safetensors
 ```
 
-If `download_if_missing=true`, Pixal3D-ComfyUI downloads missing files from `https://huggingface.co/Comfy-Org/MoGe` into `ComfyUI/models/moge/`. It uses `moge_2_vitl_normal_fp16.safetensors` for `camera_mode=moge` and does not load a `Ruicheng/moge-2-vitl` snapshot folder.
+If `download_if_missing=true`, Pixal3D-ComfyUI downloads missing files from `https://huggingface.co/Comfy-Org/MoGe` into `ComfyUI/models/geometry_estimation/`. It uses `moge_2_vitl_normal_fp16.safetensors` for `camera_mode=moge` and does not load a `Ruicheng/moge-2-vitl` snapshot folder.
 
-Pixal3D-ComfyUI removes Hugging Face `.cache` metadata and `.git` folders after node downloads. Native MoGe files are placed directly in `ComfyUI/models/moge/`; Pixal3D/DINO/RMBG helper folders should contain normal files like `.safetensors`, `.json`, and `.py`, not blob-only cache paths.
+Pixal3D-ComfyUI removes Hugging Face `.cache` metadata and `.git` folders after node downloads. Native MoGe files are placed directly in `ComfyUI/models/geometry_estimation/`; Pixal3D/DINO/RMBG helper folders should contain normal files like `.safetensors`, `.json`, and `.py`, not blob-only cache paths.
 
 Torch Hub helper code for Pixal3D's NAF upsampler is redirected to `ComfyUI/models/Pixal3D/torch_hub/`.
 

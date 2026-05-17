@@ -46,15 +46,18 @@ Pozzetti wheels provide common Windows builds:
 
 - https://github.com/PozzettiAndrea/cuda-wheels/releases
 
-Example for Python 3.12, PyTorch 2.10, CUDA 13.0:
+Example for Python 3.12, PyTorch 2.10, CUDA 13.0 on Blackwell sm120. This installs the required Pixal3D CUDA wheels plus the prebuilt NATTEN/libnatten wheel:
 
 ```bat
 venv\Scripts\python.exe -m pip install --no-deps ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl"
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
+  "https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64/resolve/main/natten-0.21.6+torch2100cu130-cp312-cp312-win_amd64.whl"
 ```
+
+If your Python, PyTorch, CUDA, or GPU architecture does not match that NATTEN wheel, omit the final NATTEN URL and use fallback NAF mode.
 
 Other Windows wheel sources:
 

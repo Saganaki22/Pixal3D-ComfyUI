@@ -29,7 +29,7 @@ transformers>=4.56.0,<5.4
 trimesh[easy]
 utils3d
 
-# Native ComfyUI MoGe weights are loaded from ComfyUI/models/moge/, but the
+# Native ComfyUI MoGe weights are loaded from ComfyUI/models/geometry_estimation/, but the
 # Python model class still comes from Microsoft's MoGe package. This commit is
 # the version verified with moge_2_vitl_normal_fp16.safetensors.
 moge @ git+https://github.com/microsoft/MoGe.git@07444410f1e33f402353b99d6ccd26bd31e469e8

@@ -290,7 +290,7 @@ def _sanitize_module_name(name: str) -> str:
 def environment_report() -> str:
     lines = ["Pixal3D-ComfyUI environment check", ""]
     lines.append(f"ComfyUI models/Pixal3D: {pixal3d_models_dir()}")
-    lines.append(f"ComfyUI models/moge: {moge_models_dir()}")
+    lines.append(f"ComfyUI models/geometry_estimation: {moge_models_dir()}")
     lines.append(f"Nodepack path: {_repo_root()}")
     lines.append("")
 

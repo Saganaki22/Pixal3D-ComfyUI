@@ -36,7 +36,7 @@ python install.py --check
 | DRTK | `drtk` | UV/export helper |
 | Pixal3D 模型 | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/pipeline.json` | 可手动下载或开启 `download_if_missing=true` |
 | DINOv3 helper | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/` | image encoder 需要 |
-| MoGe | `ComfyUI/models/moge/moge_2_vitl_normal_fp16.safetensors` | 只在 `camera_mode=moge` 时需要 |
+| MoGe | `ComfyUI/models/geometry_estimation/moge_2_vitl_normal_fp16.safetensors` | 只在 `camera_mode=moge` 时需要 |
 | RMBG-2.0 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | gated model；只在 `background_mode=auto_remove` 时需要 |
 | NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | 只在 strict NAF 时需要 |
 
@@ -53,15 +53,18 @@ Windows 上建议按这个顺序处理：
 
 Pixal3D CUDA 轮子和 NATTEN 是两件事。NATTEN 装好了不代表 `flex_gemm`、`cumesh`、`o_voxel`、`drtk` 已经装好。
 
-Python 3.12、PyTorch 2.10、CUDA 13.0 示例：
+Python 3.12、PyTorch 2.10、CUDA 13.0、Blackwell sm120 示例，包含 Pixal3D 必需 CUDA 轮子和预编译 NATTEN/libnatten 轮子：
 
 ```bat
 venv\Scripts\python.exe -m pip install --no-deps ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl"
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
+  "https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64/resolve/main/natten-0.21.6+torch2100cu130-cp312-cp312-win_amd64.whl"
 ```
+
+如果你的 Python、PyTorch、CUDA 或 GPU 架构不匹配这个 NATTEN 轮子，删掉最后一个 NATTEN URL，并使用 `naf_mode=fallback_if_missing`、`preload_naf=false`。
 
 更多说明见 [Windows 轮子指南](docs/windows_wheels.md)。
 
@@ -113,7 +116,7 @@ ComfyUI/models/
 │   │   └── ckpts/*.safetensors
 │   ├── camenduru_dinov3-vitl16-pretrain-lvd1689m/
 │   └── briaai_RMBG-2.0/
-└── moge/
+└── geometry_estimation/
     ├── moge_1_vitl_fp16.safetensors
     └── moge_2_vitl_normal_fp16.safetensors
 ```
@@ -151,7 +154,7 @@ Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 | `flex_gemm`、`cumesh`、`o_voxel`、`drtk` 缺失 | 安装匹配 Python/PyTorch/CUDA/Windows/GPU 的 Pixal3D CUDA 轮子 |
 | `natten.HAS_LIBNATTEN=False` | 使用 `naf_mode=fallback_if_missing`、`preload_naf=false`，或安装/构建 CUDA NATTEN |
 | RMBG 下载失败 | 接受模型条款、登录并设置 `HF_TOKEN`，或用透明输入和 `keep_alpha` |
-| MoGe 缺失 | 下载 Comfy-Org/MoGe 到 `ComfyUI/models/moge/`，或使用手动相机 |
+| MoGe 缺失 | 下载 Comfy-Org/MoGe 到 `ComfyUI/models/geometry_estimation/`，或使用手动相机 |
 | GLB 碎裂 | 尝试 `remesh=false`，保持 `decimation_target=1000000` 或更高 |
 
 更多见 [故障排查](docs/troubleshooting.md)。

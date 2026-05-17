@@ -28,7 +28,7 @@ TOOLTIPS = {
     "hf_endpoint": "Hugging Face endpoint used only when download_if_missing is enabled. Default is https://huggingface.co; Chinese users can use https://hf-mirror.com.",
     "attention_backend": "auto uses FlashAttention 3 if flash_attn_interface imports, otherwise FlashAttention 2 if flash_attn imports.",
     "vram_mode": "dynamic_vram builds Pixal3D with Comfy/Aimdo-aware ops for best-effort native staging. native_low_vram bypasses Comfy bulk load and stages Pixal3D modules CPU/GPU. full_gpu keeps modules resident.",
-    "download_if_missing": "When enabled, downloads Pixal3D/helper models into ComfyUI/models/Pixal3D and native MoGe files into ComfyUI/models/moge. When disabled, no model downloads are attempted.",
+    "download_if_missing": "When enabled, downloads Pixal3D/helper models into ComfyUI/models/Pixal3D and native MoGe files into ComfyUI/models/geometry_estimation. When disabled, no model downloads are attempted.",
     "load_moge": "Load MoGe for camera_mode=moge. Disable only if you will use manual camera mode.",
     "load_rembg": "Load the gated briaai/RMBG-2.0 helper model for background_mode=auto_remove. Requires local files or download_if_missing with HF access/token.",
     "naf_mode": "fallback_if_missing keeps Pixal3D's required 2048-channel shape by duplicating DINO features if CUDA NATTEN/NAF is unavailable. strict requires real NAF.",

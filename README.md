@@ -36,7 +36,7 @@ A working generation environment needs these imports inside the same Python that
 | DRTK | `drtk` | UV/export helper |
 | Pixal3D model | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/pipeline.json` | Download manually or use `download_if_missing=true` |
 | DINOv3 helper | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/` | Needed by the image encoder |
-| MoGe | `ComfyUI/models/moge/moge_2_vitl_normal_fp16.safetensors` | Only needed for `camera_mode=moge` |
+| MoGe | `ComfyUI/models/geometry_estimation/moge_2_vitl_normal_fp16.safetensors` | Only needed for `camera_mode=moge` |
 | RMBG-2.0 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | Gated model; only needed for `background_mode=auto_remove` |
 | NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | Only needed for strict NAF |
 
@@ -53,15 +53,18 @@ On Windows, install wheels in this order:
 
 The required Pixal3D CUDA wheels are separate from NATTEN. A working NATTEN install does not mean `flex_gemm`, `cumesh`, `o_voxel`, or `drtk` are installed.
 
-For Python 3.12, PyTorch 2.10, CUDA 13.0, the required Pixal3D CUDA wheels can be installed with:
+For Python 3.12, PyTorch 2.10, CUDA 13.0 on Blackwell sm120, install the required Pixal3D CUDA wheels plus the prebuilt NATTEN/libnatten wheel with:
 
 ```bat
 venv\Scripts\python.exe -m pip install --no-deps ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl"
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
+  "https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64/resolve/main/natten-0.21.6+torch2100cu130-cp312-cp312-win_amd64.whl"
 ```
+
+If your Python, PyTorch, CUDA, or GPU architecture does not match that NATTEN wheel, omit the final NATTEN URL and use `naf_mode=fallback_if_missing`, `preload_naf=false`.
 
 More detail: [Windows wheel guide](docs/windows_wheels.md).
 
@@ -115,7 +118,7 @@ ComfyUI/models/
 │   │   └── ckpts/*.safetensors
 │   ├── camenduru_dinov3-vitl16-pretrain-lvd1689m/
 │   └── briaai_RMBG-2.0/
-└── moge/
+└── geometry_estimation/
     ├── moge_1_vitl_fp16.safetensors
     └── moge_2_vitl_normal_fp16.safetensors
 ```
@@ -186,7 +189,7 @@ Pixal3D Image To 3D camera_mode=manual
 | `flex_gemm`, `cumesh`, `o_voxel`, or `drtk` missing | Install matching Pixal3D CUDA wheels for your Python/PyTorch/CUDA/OS |
 | `natten.HAS_LIBNATTEN=False` | Use `naf_mode=fallback_if_missing`, `preload_naf=false`, or install/build CUDA NATTEN |
 | RMBG download fails | Accept gated model terms, log in, set `HF_TOKEN`, or use transparent input with `keep_alpha` |
-| MoGe missing | Download Comfy-Org/MoGe files to `ComfyUI/models/moge/` or use manual camera mode |
+| MoGe missing | Download Comfy-Org/MoGe files to `ComfyUI/models/geometry_estimation/` or use manual camera mode |
 | GLB looks fragmented | Try `remesh=false`; keep `decimation_target=1000000` or higher |
 | RAM stays high after unload | Use Pixal3D Unload Model; restart ComfyUI to return all reserved Python/PyTorch memory to the OS |
 
