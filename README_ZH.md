@@ -124,24 +124,46 @@ Windows 标签，win_amd64
 
 如果没有匹配轮子，就使用 fallback 模式，或者按 [Build_Natten_windows.md](docs/Build_Natten_windows.md) 自己构建。
 
-## 模型目录
+## 手动下载模型
 
-默认目录：
+如果 `download_if_missing=false`，请手动下载模型并放到下面这些目录。请下载完整 snapshot，不要只随便下载单个文件。
+
+| 模型 | 下载链接 | 本地目录 | 什么时候需要 |
+|---|---|---|---|
+| Pixal3D | [TencentARC/Pixal3D](https://huggingface.co/TencentARC/Pixal3D) | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/` | 必需 |
+| DINOv3 helper | [camenduru/dinov3-vitl16-pretrain-lvd1689m](https://huggingface.co/camenduru/dinov3-vitl16-pretrain-lvd1689m) | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/` | 必需 |
+| MoGe | [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe) | `ComfyUI/models/geometry_estimation/` | `camera_mode=moge` |
+| RMBG-2.0 | [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | `background_mode=auto_remove` |
+| NAF upsampler | [valeoai/NAF](https://github.com/valeoai/NAF) | `ComfyUI/models/Pixal3D/torch_hub/` cache | 只在 strict NAF 时需要 |
+
+RMBG-2.0 是 Hugging Face gated model。先申请权限并登录再下载。如果不想用 RMBG，请使用透明 PNG/WebP，并设置 `background_mode=keep_alpha`，或者使用 `background_mode=none`。
+
+期望目录结构：
 
 ```text
 ComfyUI/models/
 ├── Pixal3D/
 │   ├── TencentARC_Pixal3D/
 │   │   ├── pipeline.json
-│   │   └── ckpts/*.safetensors
+│   │   └── ckpts/
+│   │       ├── *.json
+│   │       └── *.safetensors
 │   ├── camenduru_dinov3-vitl16-pretrain-lvd1689m/
+│   │   ├── config.json
+│   │   ├── model.safetensors
+│   │   └── preprocessor_config.json
 │   └── briaai_RMBG-2.0/
+│       ├── config.json
+│       ├── BiRefNet_config.py
+│       ├── birefnet.py
+│       ├── model.safetensors
+│       └── preprocessor_config.json
 └── geometry_estimation/
     ├── moge_1_vitl_fp16.safetensors
     └── moge_2_vitl_normal_fp16.safetensors
 ```
 
-RMBG-2.0 是 Hugging Face gated model。先申请权限并登录，或者使用透明 PNG/WebP，设置 `background_mode=keep_alpha` 跳过 RMBG。
+`Comfy-Org/MoGe` 里的 MoGe 文件要直接放在 `ComfyUI/models/geometry_estimation/`，不要再套一层 `Comfy-Org/MoGe` 文件夹。`hf_endpoint` 可以改成 Hugging Face 镜像。
 
 ## 推荐设置
 

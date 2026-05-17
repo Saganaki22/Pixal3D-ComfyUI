@@ -126,26 +126,46 @@ Known community Windows NATTEN wheels:
 
 More detail: [Windows wheel guide](docs/windows_wheels.md) and [Build NATTEN on Windows](docs/Build_Natten_windows.md).
 
-## Model Folders
+## Manual Model Downloads
 
-Default model layout:
+If `download_if_missing=false`, download the model files yourself and place them in these folders. Download the full snapshots, not single random files.
+
+| Model | Download link | Local folder | Needed when |
+|---|---|---|---|
+| Pixal3D | [TencentARC/Pixal3D](https://huggingface.co/TencentARC/Pixal3D) | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/` | Always |
+| DINOv3 helper | [camenduru/dinov3-vitl16-pretrain-lvd1689m](https://huggingface.co/camenduru/dinov3-vitl16-pretrain-lvd1689m) | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/` | Always |
+| MoGe | [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe) | `ComfyUI/models/geometry_estimation/` | `camera_mode=moge` |
+| RMBG-2.0 | [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | `background_mode=auto_remove` |
+| NAF upsampler | [valeoai/NAF](https://github.com/valeoai/NAF) | `ComfyUI/models/Pixal3D/torch_hub/` cache | Strict NAF only |
+
+RMBG-2.0 is gated on Hugging Face. Accept the model terms and log in before downloading it. If you do not want RMBG, use a transparent PNG/WebP and set `background_mode=keep_alpha`, or use `background_mode=none`.
+
+Expected model layout:
 
 ```text
 ComfyUI/models/
 ├── Pixal3D/
 │   ├── TencentARC_Pixal3D/
 │   │   ├── pipeline.json
-│   │   └── ckpts/*.safetensors
+│   │   └── ckpts/
+│   │       ├── *.json
+│   │       └── *.safetensors
 │   ├── camenduru_dinov3-vitl16-pretrain-lvd1689m/
+│   │   ├── config.json
+│   │   ├── model.safetensors
+│   │   └── preprocessor_config.json
 │   └── briaai_RMBG-2.0/
+│       ├── config.json
+│       ├── BiRefNet_config.py
+│       ├── birefnet.py
+│       ├── model.safetensors
+│       └── preprocessor_config.json
 └── geometry_estimation/
     ├── moge_1_vitl_fp16.safetensors
     └── moge_2_vitl_normal_fp16.safetensors
 ```
 
-`download_if_missing=false` is the default. Turn it on only if you want the node to download helper models. `hf_endpoint` can be changed to a Hugging Face mirror if needed.
-
-RMBG-2.0 is gated on Hugging Face. Accept the model terms and log in, set `HF_TOKEN`, or provide a transparent PNG/WebP and use `background_mode=keep_alpha` so RMBG is not needed.
+MoGe files from `Comfy-Org/MoGe` are stored directly in `ComfyUI/models/geometry_estimation/`, not in a nested `Comfy-Org/MoGe` folder. `hf_endpoint` can be changed to a Hugging Face mirror if needed.
 
 ## Recommended Loader Settings
 
