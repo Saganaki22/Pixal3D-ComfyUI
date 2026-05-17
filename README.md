@@ -8,7 +8,13 @@ ComfyUI custom nodes for [TencentARC/Pixal3D](https://github.com/TencentARC/Pixa
 
 ## Quick Start
 
-Install the node:
+ComfyUI Manager:
+
+1. Open **ComfyUI Manager**.
+2. Search for **Pixal3D** by **Saganaki22**.
+3. Install it, restart ComfyUI, then run **Pixal3D Environment Check**.
+
+Manual install:
 
 ```bat
 cd ComfyUI\custom_nodes

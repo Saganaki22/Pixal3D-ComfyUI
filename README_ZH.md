@@ -8,7 +8,13 @@ TencentARC [Pixal3D](https://github.com/TencentARC/Pixal3D) 的 ComfyUI 节点�
 
 ## 快速安装
 
-在启动 ComfyUI 的同一个 Python 环境里安装：
+ComfyUI Manager：
+
+1. 打开 **ComfyUI Manager**。
+2. 搜索 **Pixal3D**，作者选择/确认 **Saganaki22**。
+3. 安装后重启 ComfyUI，然后先运行 **Pixal3D Environment Check**。
+
+手动安装，在启动 ComfyUI 的同一个 Python 环境里执行：
 
 ```bat
 cd ComfyUI\custom_nodes
