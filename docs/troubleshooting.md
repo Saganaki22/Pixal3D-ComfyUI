@@ -16,7 +16,7 @@ Run **Pixal3D Environment Check** first. It tells you which dependency is missin
 | RMBG fails to download | `briaai/RMBG-2.0` is gated | Accept model terms, log in/set `HF_TOKEN`, or use transparent input with `keep_alpha` |
 | MoGe missing | Auto camera model missing | Put Comfy-Org/MoGe files in `ComfyUI/models/geometry_estimation/`, or use manual camera mode |
 | GLB opens in Blender but not Windows 3D Viewer | Old WebP texture export | Re-export with current Pixal3D-ComfyUI PNG texture export |
-| Mesh is shards/point cloud | Remesh/decimation issue or bad cutout | Try `remesh=false`, `decimation_target=1000000`, clean transparent input |
+| Mesh is shards/point cloud | Remesh/decimation issue or bad cutout | Try `remesh=true`, `decimation_target=1000000`, clean transparent input |
 | RAM stays high after unload | Python/PyTorch reserved memory | Use Pixal3D Unload Model; restart ComfyUI to return all reserved memory |
 
 ## NATTEN And NAF
@@ -123,10 +123,10 @@ Pixal3D Export GLB decimation_target=1000000
 Pixal3D Export GLB texture_size=4096
 ```
 
-If mesh cleanup fragments the result, set:
+If the exported mesh looks fragmented, set:
 
 ```text
-Pixal3D Export GLB remesh=false
+Pixal3D Export GLB remesh=true
 ```
 
 ## Before Filing A Bug

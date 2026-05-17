@@ -209,7 +209,7 @@ Pixal3D Image To 3D camera_mode=manual
 | `natten.HAS_LIBNATTEN=False` | Use `naf_mode=fallback_if_missing`, `preload_naf=false`, or install/build CUDA NATTEN |
 | RMBG download fails | Accept gated model terms, log in, set `HF_TOKEN`, or use transparent input with `keep_alpha` |
 | MoGe missing | Download Comfy-Org/MoGe files to `ComfyUI/models/geometry_estimation/` or use manual camera mode |
-| GLB looks fragmented | Try `remesh=false`; keep `decimation_target=1000000` or higher |
+| GLB looks fragmented | Try `remesh=true`; keep `decimation_target=1000000` or higher |
 | RAM stays high after unload | Use Pixal3D Unload Model; restart ComfyUI to return all reserved Python/PyTorch memory to the OS |
 
 See [Troubleshooting](docs/troubleshooting.md) for longer explanations.

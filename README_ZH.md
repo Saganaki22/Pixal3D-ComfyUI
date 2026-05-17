@@ -174,6 +174,6 @@ Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 | `natten.HAS_LIBNATTEN=False` | 使用 `naf_mode=fallback_if_missing`、`preload_naf=false`，或安装/构建 CUDA NATTEN |
 | RMBG 下载失败 | 接受模型条款、登录并设置 `HF_TOKEN`，或用透明输入和 `keep_alpha` |
 | MoGe 缺失 | 下载 Comfy-Org/MoGe 到 `ComfyUI/models/geometry_estimation/`，或使用手动相机 |
-| GLB 碎裂 | 尝试 `remesh=false`，保持 `decimation_target=1000000` 或更高 |
+| GLB 碎裂 | 尝试 `remesh=true`，保持 `decimation_target=1000000` 或更高 |
 
 更多见 [故障排查](docs/troubleshooting.md)。

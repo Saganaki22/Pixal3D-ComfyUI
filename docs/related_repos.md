@@ -22,4 +22,4 @@ Repo: https://github.com/ThatButters/trellis2-blackwell-fix
 
 Useful part: documents a CuMesh remesh failure mode where export can create fragmented meshes instead of crashing.
 
-Pixal3D-ComfyUI exposes `remesh` on **Pixal3D Export GLB** so users can turn that o_voxel remesh path on or off directly. If exported GLBs look shredded, keep `decimation_target=1000000` or higher and try `remesh=false`.
+Pixal3D-ComfyUI exposes `remesh` on **Pixal3D Export GLB** so users can turn that o_voxel remesh path on or off directly. If exported GLBs look shredded, keep `decimation_target=1000000` or higher and try `remesh=true`.

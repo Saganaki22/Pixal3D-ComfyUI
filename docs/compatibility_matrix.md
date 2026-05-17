@@ -106,7 +106,7 @@ Pixal3D-ComfyUI uses `o_voxel.postprocess.to_glb()` for textured GLB export. The
 | `remesh=false` | Skips the o_voxel remesh pass |
 | `remesh=true` | Default node value; uses the full o_voxel remesh path |
 
-If an exported model looks like loose shards or a point cloud, use `decimation_target=1000000` or higher and try `remesh=false`.
+If an exported model looks like loose shards or a point cloud, use `decimation_target=1000000` or higher and try `remesh=true`.
 
 ## Conditional Helpers
 
