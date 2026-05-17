@@ -72,6 +72,19 @@ venv\Scripts\python.exe -m pip install --no-deps ^
 
 如果你的 Python、PyTorch、CUDA 或 GPU 架构不匹配这个 NATTEN 轮子，删掉最后一个 NATTEN URL，并使用 `naf_mode=fallback_if_missing`、`preload_naf=false`。
 
+Python 3.12、PyTorch 2.8、CUDA 12.8、Blackwell sm100/sm120 示例，包含匹配的 Pixal3D CUDA 轮子和 `naxneri` NATTEN/libnatten 轮子：
+
+```bat
+venv\Scripts\python.exe -m pip install --no-deps ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64/resolve/main/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64.whl"
+```
+
+如果使用 PyTorch 2.9 或其他 CUDA 12.8 栈，四个 Pozzetti URL 必须换成对应 Torch 版本的轮子。只有 Python、CUDA、GPU 匹配时才保留这个 NATTEN URL。
+
 更多说明见 [Windows 轮子指南](docs/windows_wheels.md)。
 
 ## NATTEN / NAF

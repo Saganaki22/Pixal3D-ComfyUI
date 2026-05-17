@@ -59,6 +59,19 @@ venv\Scripts\python.exe -m pip install --no-deps ^
 
 If your Python, PyTorch, CUDA, or GPU architecture does not match that NATTEN wheel, omit the final NATTEN URL and use fallback NAF mode.
 
+Example for Python 3.12, PyTorch 2.8, CUDA 12.8 on Blackwell sm100/sm120. This installs matching Pixal3D CUDA wheels plus the `naxneri` NATTEN/libnatten wheel:
+
+```bat
+venv\Scripts\python.exe -m pip install --no-deps ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
+  "https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64/resolve/main/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64.whl"
+```
+
+For PyTorch 2.9 or another CUDA 12.8 stack, change the four Pozzetti URLs to wheels built for that exact Torch version. Keep the NATTEN URL only when it matches your Python, CUDA, and GPU.
+
 Other Windows wheel sources:
 
 - https://huggingface.co/Wildminder/AI-windows-whl/tree/main
