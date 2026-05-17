@@ -1,26 +1,52 @@
 # Windows Wheel Guide
 
-Install these into ComfyUI's Python environment only. Do not install them into system Python.
+This page is only for choosing and installing Windows wheels. NATTEN source build steps live in [Build_Natten_windows.md](Build_Natten_windows.md).
 
-Generic venv example:
+Install everything into the Python environment that launches ComfyUI:
 
 ```bat
 cd C:\path\to\ComfyUI
 venv\Scripts\python.exe -m pip install --no-deps "<wheel-url>"
 ```
 
-## Required Pixal3D CUDA Wheels
+For portable ComfyUI, use `python_embeded\python.exe` instead of `venv\Scripts\python.exe`.
 
-Install all four matching your environment. This nodepack accepts either the Pozzetti-style module names or the generic module names used by visualbruno where the API matches:
+## Match Your Stack
+
+Compiled wheels must match all of these:
 
 ```text
-flex_gemm_ap or flex_gemm
-cumesh_vb or cumesh
-o_voxel_vb_ap or o_voxel
-drtk
+Python ABI: cp310, cp311, cp312, ...
+PyTorch build: torch2.8, torch2.9, torch2.10, ...
+CUDA build: cu128, cu130, ...
+OS tag: win_amd64
+GPU architecture when the wheel is architecture-specific
 ```
 
-### Python 3.12, PyTorch 2.10, CUDA 13.0
+Check your stack:
+
+```bat
+venv\Scripts\python.exe -c "import torch; print(torch.__version__, torch.version.cuda); print(torch.cuda.get_device_name(0)); print(torch.cuda.get_device_capability(0))"
+```
+
+Use `--no-deps` for manual CUDA wheels so pip does not replace a working PyTorch install.
+
+## Required Pixal3D CUDA Wheels
+
+These are required for Pixal3D generation/export. NATTEN does not replace them.
+
+| Module family | Acceptable import |
+|---|---|
+| Sparse GEMM | `flex_gemm_ap` or `flex_gemm` |
+| Mesh ops | `cumesh_vb` or `cumesh` |
+| Voxel/export ops | `o_voxel_vb_ap` or `o_voxel` |
+| DRTK helper | `drtk` |
+
+Pozzetti wheels provide common Windows builds:
+
+- https://github.com/PozzettiAndrea/cuda-wheels/releases
+
+Example for Python 3.12, PyTorch 2.10, CUDA 13.0:
 
 ```bat
 venv\Scripts\python.exe -m pip install --no-deps ^
@@ -30,109 +56,69 @@ venv\Scripts\python.exe -m pip install --no-deps ^
   "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl"
 ```
 
-### Python 3.12, PyTorch 2.9, CUDA 13.0
+Other Windows wheel sources:
 
-```bat
-venv\Scripts\python.exe -m pip install --no-deps ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu130torch2.9-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu130torch2.9-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu130torch2.9-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.9-cp312-cp312-win_amd64.whl"
-```
+- https://huggingface.co/Wildminder/AI-windows-whl/tree/main
+- https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels
 
-### Python 3.12, PyTorch 2.9, CUDA 12.8
+Do not install a wheel just because the Python tag matches. The Torch and CUDA tags must match too.
 
-```bat
-venv\Scripts\python.exe -m pip install --no-deps ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu128torch2.9-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu128torch2.9-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu128torch2.9-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu128torch2.9-cp312-cp312-win_amd64.whl"
-```
+## Attention Wheel
 
-### Python 3.12, PyTorch 2.8, CUDA 12.8
+Pixal3D needs one attention backend:
 
-```bat
-venv\Scripts\python.exe -m pip install --no-deps ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu128torch2.8-cp312-cp312-win_amd64.whl" ^
-  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu128torch2.8-cp312-cp312-win_amd64.whl"
-```
+| Backend | Import |
+|---|---|
+| FlashAttention 2 | `flash_attn` |
+| FlashAttention 3 | `flash_attn_interface` |
 
-## Attention Wheels
-
-Pixal3D needs FlashAttention 2 or FlashAttention 3 before the model can load. Treat this as a prerequisite; the guarded installer does not install FlashAttention.
-
-### FlashAttention 2
-
-Pozzetti wheels:
+Example FlashAttention 2 wheel for Python 3.12, PyTorch 2.10, CUDA 13.0:
 
 ```bat
 venv\Scripts\python.exe -m pip install --no-deps "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flash_attn-latest/flash_attn-2.8.3%2Bcu130torch2.10-cp312-cp312-win_amd64.whl"
 ```
 
-Wildminder wheels are also available for many stacks. Example for Python 3.12, PyTorch 2.10.0, CUDA 13.0:
-
-```bat
-venv\Scripts\python.exe -m pip install --no-deps "https://huggingface.co/Wildminder/AI-windows-whl/resolve/main/flash_attn-2.8.3+cu130torch2.10.0cxx11abiTRUE-cp312-cp312-win_amd64.whl"
-```
-
-### FlashAttention 3
-
-Use only if the wheel provides `flash_attn_interface`.
-
-Example for PyTorch 2.10, CUDA 13.0, Python 3.9+ ABI3:
-
-```bat
-venv\Scripts\python.exe -m pip install --no-deps "https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.9.3/flash_attn_3-3.0.0+cu130torch2.10gite2743ab-cp39-abi3-win_amd64.whl"
-```
-
-Then set `attention_backend=flash_attn_3`, or leave `attention_backend=auto`.
+Use `attention_backend=auto` unless you need to force a specific backend.
 
 ## Triton
 
-Triton is optional for Pixal3D-ComfyUI, but many Windows AI environments already use it.
-
-If your Windows stack needs Triton:
+Some Windows stacks need Triton for related CUDA kernels:
 
 ```bat
 venv\Scripts\python.exe -m pip install -U "triton-windows<3.7"
 ```
 
-## visualbruno Wheel Folder
-
-visualbruno's ComfyUI-Trellis2 repo has a useful wheel folder:
-
-```text
-https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels
-```
-
-Important folders:
-
-| Folder | Contains | Notes for Python 3.12 + Torch 2.10.0+cu130 |
-|---|---|---|
-| `Torch2100` | `cumesh`, `custom_rasterizer`, `flex_gemm`, `nvdiffrast`, `o_voxel` cp311/cp312 | Useful fallback source for generic module-name wheels; no cp312 `natten` here |
-| `Torch2100/CUDA 13.1` | cp311/cp312/cp313 CUDA wheels plus `natten-0.21.6-cp313` | Extension wheels may be useful if compatible; NATTEN is Python 3.13 only |
-| `Torch280` | Torch 2.8-era cp311/cp312 wheels plus `natten-0.21.6-cp312` | NATTEN wheel is not for Torch 2.10 |
-| `Torch270` | Torch 2.7-era cp311/cp312 wheels | Not for the locked Torch 2.10 stack |
-
-Do not install a wheel just because the Python tag matches. The package also has to match the Torch/CUDA ABI it was built against.
+Install it only if your stack needs it or **Pixal3D Environment Check** reports it missing.
 
 ## NATTEN / NAF
 
-Official TencentARC Pixal3D uses NAF for the shape and texture stages, and NAF imports NATTEN. The released Pixal3D shape/texture weights expect 2048-channel projected features.
+NAF is Pixal3D's feature refinement step for shape and texture generation. NAF uses NATTEN.
 
-`requirements.txt` installs plain `natten==0.21.6` as a baseline dependency, but if pip installs `natten-0.21.6-py3-none-any.whl`, that is not the CUDA extension build and will not satisfy strict NAF.
+Strict upstream NAF requires NATTEN with CUDA `libnatten`:
 
-### Community Windows NATTEN Wheels
+```bat
+venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
+```
 
-These community-built wheels provide CUDA-enabled NATTEN/libnatten for Windows. Use `--no-deps` to avoid pip changing your Torch:
+`HAS_LIBNATTEN` must be `True` for strict NAF.
+
+If pip installs normal `natten-0.21.6-py3-none-any.whl`, NATTEN may import but CUDA `libnatten` is not available. In that case set:
+
+```text
+Pixal3D Model Loader naf_mode=fallback_if_missing
+Pixal3D Model Loader preload_naf=false
+```
+
+Fallback mode is expected on Windows when no matching NATTEN/libnatten wheel exists. It can be slower, use more RAM/VRAM, and produce lower quality than strict NAF, but it lets Pixal3D run.
+
+## Community Windows NATTEN Wheels
+
+Use these only when they match your stack exactly:
 
 | Python | PyTorch | CUDA | GPU | Wheel |
 |---|---|---|---|---|
-| 3.12 | 2.10 | 13.0 | sm120 (RTX 5090) | [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) |
-| 3.12 | 2.8+ | 12.8 | Blackwell (sm100/sm120) | [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) |
+| 3.12 | 2.10 | 13.0 | Blackwell sm120 | [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) |
+| 3.12 | 2.8+ | 12.8 | Blackwell sm100/sm120 | [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) |
 
 Install example:
 
@@ -140,135 +126,24 @@ Install example:
 venv\Scripts\python.exe -m pip install --no-deps "https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64/resolve/main/natten-0.21.6+torch2100cu130-cp312-cp312-win_amd64.whl"
 ```
 
-After installing, verify:
+Then verify `HAS_LIBNATTEN=True`.
 
-```bat
-venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
-```
-
-`HAS_LIBNATTEN` must be `True` for strict NAF. If it is `False`, set `naf_mode=fallback_if_missing`.
-
-Also see [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) and [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) for additional community Windows NATTEN wheels where available.
-
-### Official NATTEN Wheel Index
-
-The tag people look for:
-
-```bat
-natten==0.21.6+torch2100cu130
-```
-
-At the time of writing, `https://whl.natten.org` provides that tag for Linux, not Windows.
-
-Pixal3D-ComfyUI defaults to `naf_mode=fallback_if_missing`, which keeps the 2048-channel tensor shape by duplicating DINO projection features when CUDA NATTEN/NAF is unavailable. For exact upstream NAF behavior, install a matching CUDA-enabled NATTEN wheel and set `naf_mode=strict`.
-
-Official NATTEN wheel commands from `https://whl.natten.org`:
-
-| PyTorch | CUDA | Install command |
-|---|---:|---|
-| `2.11.0+cu130` | 13.0 | `pip install natten==0.21.6+torch2110cu130 -f https://whl.natten.org` |
-| `2.11.0+cu128` | 12.8 | `pip install natten==0.21.6+torch2110cu128 -f https://whl.natten.org` |
-| `2.11.0+cu126` | 12.6 | `pip install natten==0.21.6+torch2110cu126 -f https://whl.natten.org` |
-| `2.10.0+cu130` | 13.0 | `pip install natten==0.21.6+torch2100cu130 -f https://whl.natten.org` |
-| `2.10.0+cu128` | 12.8 | `pip install natten==0.21.6+torch2100cu128 -f https://whl.natten.org` |
-| `2.10.0+cu126` | 12.6 | `pip install natten==0.21.6+torch2100cu126 -f https://whl.natten.org` |
-
-Notes:
-
-- The official index describes these as x86-64/aarch64 builds, but the current wheel files for PyTorch 2.10/2.11 are Linux wheels. On Windows, pip will reject them because they are not `win_amd64`. Community Windows wheels may be available — see the community table above.
-- For CUDA 12.6 builds, Blackwell FNA/FMHA kernels are not available. Blackwell support starts with CUDA Toolkit 12.8.
-- For Windows Python 3.12 + Torch 2.10 + CUDA 13.0, check the community wheel table above for a matching `win_amd64` NATTEN wheel. If no matching wheel is available for your GPU architecture, use `naf_mode=fallback_if_missing` or try a local source build.
-- Use `--no-deps` when testing a NATTEN wheel inside an existing ComfyUI environment so pip does not change Torch:
-
-```bat
-venv\Scripts\python.exe -m pip install --no-deps "natten==0.21.6+torch2100cu130" -f https://whl.natten.org
-```
-
-Check whether NATTEN is actually usable:
-
-```bat
-venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
-```
-
-`HAS_LIBNATTEN` must be `True` for strict NAF. If it is `False`, set `naf_mode=fallback_if_missing`.
-
-`comfy-sparse-attn==0.0.9` from ComfyUI-TRELLIS2 is not a replacement for NATTEN or NAF. It provides sparse/variable-length attention dispatch and helper namespace links for ComfyUI sparse primitives. It does not provide NATTEN's neighborhood attention API or CUDA `libnatten`, so it cannot enable `naf_mode=strict`.
-
-## Native Windows NATTEN Build
-
-If no community wheel matches your stack, you can build NATTEN from source on Windows. See the dedicated guide:
-
-**[Building NATTEN on Windows](Build_Natten_windows.md)**
-
-The guide covers prerequisites, MSVC fixes (`not` → `!`), `nvToolsExt` patches, `python3X.lib` issues, and the full build/install/verify flow.
-
-Legacy build notes (kept for reference):
-
-Open a normal Command Prompt and launch the MSVC developer environment:
-
-```bat
-"C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
-```
-
-Then run:
-
-```bat
-cd /d C:\path\to\ComfyUI
-set PATH=%CD%\venv\Scripts;%PATH%
-set CMAKE_GENERATOR=Ninja
-set CMAKE_MAKE_PROGRAM=%CD%\venv\Scripts\ninja.exe
-set NATTEN_CUDA_ARCH=12.0
-set NATTEN_N_WORKERS=8
-set NATTEN_VERBOSE=1
-
-where cl
-where nvcc
-where cmake
-where ninja
-
-venv\Scripts\python.exe -m pip uninstall -y natten libnatten
-venv\Scripts\python.exe -m pip install --upgrade "setuptools>=80" wheel packaging
-venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation --no-binary=:all: --no-cache-dir -v natten==0.21.6
-venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
-```
-
-For GPUs where PyTorch reports compute capability `12.0`, use `NATTEN_CUDA_ARCH=12.0`. If the build succeeds and another ComfyUI package needs old setuptools, restore it afterward:
-
-```bat
-venv\Scripts\python.exe -m pip install "setuptools==65.0.0"
-```
-
-If CMake still says Ninja or compilers are missing, the problem is the active shell, not the Python package. Confirm all four commands resolve in the same terminal before building:
-
-```bat
-where cl
-where nvcc
-where cmake
-where ninja
-```
-
-If `cl` is missing, you are not inside the Visual Studio developer environment. If `ninja` is missing, make sure `%CD%\venv\Scripts` is first on `PATH`.
-
-## Remesh Export Note
-
-Pixal3D-ComfyUI accepts `Pixal3D Export GLB remesh=true` to match upstream workflows and passes that value through to `o_voxel`. If remesh creates fragmented output on your wheel/driver/GPU combination, turn it off in the export node.
-
-Use:
+If no Windows NATTEN wheel matches your exact Python, PyTorch, CUDA, and GPU architecture, choose one path:
 
 ```text
-Pixal3D Export GLB -> decimation_target=1000000
-Pixal3D Export GLB -> texture_size=4096
+Recommended: use naf_mode=fallback_if_missing and preload_naf=false
+Advanced: build NATTEN yourself using Build_Natten_windows.md
 ```
 
-If you see tiny GLBs, loose shards, or point-cloud-looking output, do not lower decimation to 200000. Use the upstream default `1000000` or higher.
+## Verify
 
-## Verification
-
-Run:
+Run these in ComfyUI's Python:
 
 ```bat
-venv\Scripts\python.exe -c "import torch, flash_attn, drtk; print(torch.__version__, torch.version.cuda); print(flash_attn.__version__)"
-venv\Scripts\python.exe -c "import importlib; print(importlib.import_module('flex_gemm_ap' if importlib.util.find_spec('flex_gemm_ap') else 'flex_gemm')); print(importlib.import_module('cumesh_vb' if importlib.util.find_spec('cumesh_vb') else 'cumesh')); print(importlib.import_module('o_voxel_vb_ap' if importlib.util.find_spec('o_voxel_vb_ap') else 'o_voxel'))"
+venv\Scripts\python.exe -c "import torch; print(torch.__version__, torch.version.cuda)"
+venv\Scripts\python.exe -c "import importlib.util as u; print(u.find_spec('flash_attn') or u.find_spec('flash_attn_interface'))"
+venv\Scripts\python.exe -c "import importlib.util as u; print(u.find_spec('flex_gemm_ap') or u.find_spec('flex_gemm')); print(u.find_spec('cumesh_vb') or u.find_spec('cumesh')); print(u.find_spec('o_voxel_vb_ap') or u.find_spec('o_voxel')); print(u.find_spec('drtk'))"
+venv\Scripts\python.exe -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
 ```
 
 Then run **Pixal3D Environment Check** in ComfyUI.

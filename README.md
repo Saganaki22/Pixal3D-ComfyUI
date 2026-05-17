@@ -1,529 +1,211 @@
-<div align="center">
-
-# Pixal3D: Pixel-Aligned 3D Generation from Images
-
-<h3>SIGGRAPH 2026</h3>
-
-[Dong-Yang Li](https://ldyang694.github.io/)¹ · [Wang Zhao](https://thuzhaowang.github.io/)²* · [Yuxin Chen](https://orcid.org/0000-0002-7854-1072)² · [Wenbo Hu](https://wbhu.github.io/)² · [Meng-Hao Guo](https://menghaoguo.github.io/)¹ · [Fang-Lue Zhang](https://fanglue.github.io/)³ · [Ying Shan](https://www.linkedin.com/in/YingShanProfile)² · [Shi-Min Hu](https://cg.cs.tsinghua.edu.cn/shimin.htm)¹✉
-
-¹Tsinghua University (BNRist) &nbsp;&nbsp; ²Tencent ARC Lab &nbsp;&nbsp; ³Victoria University of Wellington
-
-*Project lead &nbsp;&nbsp; ✉Corresponding author
-
-</div>
-
-<div align="center">
-  <a href="https://ldyang694.github.io/projects/pixal3d/"><img src=https://img.shields.io/badge/Project%20Page-333399.svg?logo=googlehome height=22px></a>
-  <a href="https://huggingface.co/spaces/TencentARC/Pixal3D"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Demo-276cb4.svg height=22px></a>
-  <a href="https://huggingface.co/TencentARC/Pixal3D"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Models-d96902.svg height=22px></a>
-  <a href="https://arxiv.org/abs/2605.10922"><img src=https://img.shields.io/badge/Arxiv-b5212f.svg?logo=arxiv height=22px></a>
-</div>
-
-<div align="center">
-   <img width="3840" height="2160" alt="teaser-jpeg" src="https://github.com/user-attachments/assets/80c31413-e51c-437f-9c5f-1c7fd7ee77f3" />
-
-</div>
-
-**Pixal3D** generates high-fidelity 3D assets from a single image. Unlike previous methods that loosely inject image features via attention, Pixal3D explicitly lifts pixel features into 3D through back-projection, establishing direct pixel-to-3D correspondences. This enables near-reconstruction-level fidelity with detailed geometry and PBR textures.
-
----
-
 # Pixal3D-ComfyUI
 
-**Pixal3D image-to-3D nodes for ComfyUI** - local TencentARC Pixal3D generation with textured GLB export, FlashAttention 2/3 backend selection, and ComfyUI DynamicVRAM/Aimdo support.
+ComfyUI custom nodes for [TencentARC/Pixal3D](https://github.com/TencentARC/Pixal3D): image-to-3D generation, textured GLB export, FlashAttention 2/3 selection, manual camera control, and ComfyUI model unload support.
 
-[![ComfyUI](https://img.shields.io/badge/ComfyUI-custom%20node-2f80ed)](https://github.com/comfyanonymous/ComfyUI)
-[![Windows CUDA](https://img.shields.io/badge/Windows-CUDA%20required-76b900)](docs/windows_wheels.md)
-[![Python](https://img.shields.io/badge/Python-3.10--3.13-3776ab)](docs/compatibility_matrix.md)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.8%2B-ee4c2c)](docs/compatibility_matrix.md)
-[![Pixal3D Model](https://img.shields.io/badge/HuggingFace-TencentARC%2FPixal3D-blue)](https://huggingface.co/TencentARC/Pixal3D)
-[![MoGe Weights](https://img.shields.io/badge/HuggingFace-Comfy--Org%2FMoGe-blue)](https://huggingface.co/Comfy-Org/MoGe)
-[![RMBG-2.0](https://img.shields.io/badge/RMBG--2.0-gated-orange)](https://huggingface.co/briaai/RMBG-2.0)
-[![License](https://img.shields.io/badge/License-see%20LICENSE-lightgrey)](LICENSE)
+[Compatibility](docs/compatibility_matrix.md) | [Windows Wheels](docs/windows_wheels.md) | [Build NATTEN On Windows](docs/Build_Natten_windows.md) | [Troubleshooting](docs/troubleshooting.md) | [Chinese README](README_ZH.md)
 
-[中文说明](README_ZH.md) | [Compatibility](docs/compatibility_matrix.md) | [Portable Install](docs/portable_standalone_install.md) | [Linux/WSL CUDA](docs/linux_wsl_cuda.md) | [Windows Wheels](docs/windows_wheels.md) | [Troubleshooting](docs/troubleshooting.md) | [Related Repos](docs/related_repos.md)
+![Pixal3D preview](https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa)
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/45d596b4-9070-44d2-8e4f-1019169d3daa" width="1200"><br><br>
+## Quick Start
 
-  <img src="https://github.com/user-attachments/assets/a2ef8b6e-ff68-4a81-a595-1e84eab2062c" width="800">
-</p>
+Install the node:
 
-
-
-## Features
-
-- Pixal3D image-to-3D generation directly inside ComfyUI
-- Textured `.glb` export from Pixal3D voxel attributes
-- FlashAttention 2 and FlashAttention 3 runtime selection
-- `auto` attention mode picks FlashAttention 3 when installed, otherwise FlashAttention 2
-- ComfyUI model management, unload, DynamicVRAM, and Aimdo/MemoryVisualization visibility
-- Native low-VRAM Pixal3D mode for staged CPU/GPU movement
-- **Pixal3D Camera Control** node for manual FOV, distance, and mesh-scale setup with Scene/POV preview
-
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="https://github.com/user-attachments/assets/8b53ffe6-115c-4ab2-9170-dc7e8f0e69aa" width="350"><br>
-      <b>scene</b>
-    </td>
-    <td align="center">
-      <img src="https://github.com/user-attachments/assets/ba6e7a92-89c8-449c-a81a-79a6d67c6011" width="350"><br>
-      <b>POV</b>
-    </td>
-  </tr>
-</table>
-
-
-- GLB path output connects directly to ComfyUI's native **Preview 3D & Animation**
-
-## Installation
-
-### Method 1: ComfyUI Manager
-
-Search for `Pixal3D` or `Pixal3D-ComfyUI` in ComfyUI Manager and install it.
-
-### Method 2: Manual Install
-
-```bash
-cd ComfyUI/custom_nodes
+```bat
+cd ComfyUI\custom_nodes
 git clone https://github.com/Saganaki22/Pixal3D-ComfyUI.git
 cd Pixal3D-ComfyUI
 python -m pip install -r requirements.txt
 python install.py --check
 ```
 
-### Method 3: uv
+Restart ComfyUI, then run **Pixal3D Environment Check** before loading the model.
 
-```bash
-cd ComfyUI/custom_nodes/Pixal3D-ComfyUI
-uv pip install -r requirements.txt
-```
+`requirements.txt` installs only safe Python packages. It deliberately does not install Torch, FlashAttention, Triton, Pixal3D CUDA kernels, or renderer kernels because those wheels must match your exact Python, PyTorch, CUDA, OS, and GPU.
 
-Package-style installs also use the same dependency set:
+## Required Pieces
 
-```bash
-python -m pip install .
-uv pip install .
-```
+A working generation environment needs these imports inside the same Python that launches ComfyUI:
 
-Restart ComfyUI after installing or updating.
-
-Pixal3D-ComfyUI includes a guarded `install.py` for ComfyUI Manager, portable ComfyUI, standalone venv installs, and Linux venv installs. By default it installs only the safe runtime requirements and prints an environment report. It does **not** change PyTorch and does **not** install CUDA wheels unless you explicitly enable an exact-match wheel path.
-
-`requirements.txt` is the safe runtime list. It intentionally does not include `torch`, `torchvision`, `flash-attn`, `triton`, `flex_gemm`, `cumesh`, `o_voxel`, `drtk`, or `nvdiffrast`. Those are binary/CUDA stack packages and must be installed from matching wheels or built for the active environment. See [requirements-cuda-manual.txt](requirements-cuda-manual.txt), [portable install guide](docs/portable_standalone_install.md), [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md), and [Windows wheel guide](docs/windows_wheels.md).
-
-Plain `natten==0.21.6` is included as a baseline dependency because similar Pixal3D wrappers import it. Do not mistake that for strict NAF support. Pixal3D's strict NAF path requires `natten.HAS_LIBNATTEN == True`; a generic `natten-0.21.6-py3-none-any.whl` imports but does not provide CUDA libnatten.
-
-FlashAttention 2 or 3 is a prerequisite. Install a matching FlashAttention wheel for your Python, PyTorch, CUDA, and OS before loading Pixal3D.
-
-If **Pixal3D Environment Check** reports missing `flex_gemm`, `cumesh`, `o_voxel`, or `drtk`, the normal install did not fail. Those are Pixal3D compiled CUDA wheels and are opt-in. On a known Windows stack, run:
-
-```bash
-python install.py --install-known-cuda
-```
-
-If your stack is not in the bundled wheel map, install matching wheels or source builds manually from [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md) or [Windows wheel guide](docs/windows_wheels.md).
-
-### Required Wheels And Model Files
-
-`requirements.txt` is not the full Pixal3D install. A working generation environment needs these too:
-
-| Type | Required item | What file/module should exist | Where to get it |
-|---|---|---|---|
-| Attention wheel | FlashAttention 2 or 3 | `flash_attn` or `flash_attn_interface` imports | [Windows wheels](docs/windows_wheels.md#attention-wheels) or [Linux/WSL guide](docs/linux_wsl_cuda.md#flashattention) |
-| CUDA wheel | Sparse GEMM | `flex_gemm_ap` or `flex_gemm` imports | [Windows wheels](docs/windows_wheels.md#required-pixal3d-cuda-wheels) or [Linux/WSL guide](docs/linux_wsl_cuda.md#required-pixal3d-cuda-extensions) |
-| CUDA wheel | Mesh ops | `cumesh_vb` or `cumesh` imports | Same wheel guide for your OS |
-| CUDA wheel | Voxel/remesh ops | `o_voxel_vb_ap` or `o_voxel` imports | Same wheel guide for your OS |
-| CUDA wheel | DRTK | `drtk` imports | Same wheel guide for your OS |
-| CUDA/runtime wheel | Triton | `triton` imports if your attention/sparse stack expects it | Windows usually uses `triton-windows`; Linux usually uses matching `triton` |
-| Optional renderer wheel | NVIDIA raster/render helpers | `nvdiffrast` / `nvdiffrec_render` imports | Optional; install only if your renderer path needs them |
-| Optional strict NAF wheel | CUDA NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | Linux/WSL usually has official wheels; Windows often needs fallback or a source build |
-| Main model files | TencentARC Pixal3D | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/pipeline.json` and `ckpts/*.safetensors` | [TencentARC/Pixal3D](https://huggingface.co/TencentARC/Pixal3D) or `download_if_missing=true` |
-| DINOv3 helper files | Pixal3D image encoder | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/model.safetensors` | Downloaded with helpers when enabled, or place a complete snapshot there |
-| MoGe camera files | Auto camera mode | `ComfyUI/models/moge/moge_2_vitl_normal_fp16.safetensors` | [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe), or skip with `camera_mode=manual` |
-| RMBG files | Built-in background removal | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` complete snapshot | [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) is gated; request access first, or use transparent PNG/WebP |
-
-For the easiest low-VRAM/manual setup, you can skip MoGe and RMBG: set `load_moge=false`, `load_rembg=false`, use a transparent PNG/WebP with `background_mode=keep_alpha`, and connect **Pixal3D Camera Control** to `manual_fov`.
-
-### What Am I Missing?
-
-Run **Pixal3D Environment Check** first. Match the first missing line to this table:
-
-| Environment Check says | What it means | What to do |
+| Piece | Required import or file | Notes |
 |---|---|---|
-| `flash_attn: MISSING` and `flash_attn_interface: MISSING` | Attention backend is missing | Install a matching FlashAttention 2 or 3 wheel for your Python/PyTorch/CUDA/OS |
-| `flex_gemm_ap: MISSING` and `flex_gemm: MISSING` | Pixal3D sparse GEMM extension is missing | Install/build matching `flex_gemm_ap` or `flex_gemm` |
-| `cumesh_vb: MISSING` and `cumesh: MISSING` | Pixal3D mesh extension is missing | Install/build matching `cumesh_vb` or `cumesh` |
-| `o_voxel_vb_ap: MISSING` and `o_voxel: MISSING` | Pixal3D voxel/remesh extension is missing | Install/build matching `o_voxel_vb_ap` or `o_voxel` |
-| `drtk: MISSING` | DRTK renderer dependency is missing | Install/build matching `drtk` |
-| `triton: MISSING` | Triton runtime is missing | Install matching `triton-windows` on Windows or matching `triton` on Linux if your wheel stack needs it |
-| `nvdiffrast: MISSING` or `nvdiffrec_render: MISSING` | Optional renderer packages are missing | Install only if your workflow needs those renderer paths; basic GLB export can work without them |
-| `natten: MISSING` | Baseline NATTEN import is missing | Reinstall `requirements.txt` or run `pip install natten==0.21.6` in ComfyUI's Python |
-| `natten.HAS_LIBNATTEN: False` | NATTEN imports, but strict CUDA NAF is not available | Use `naf_mode=fallback_if_missing`, or install/build CUDA NATTEN/libnatten for your stack |
-| `RMBG-2.0` missing or gated | Background remover weights are unavailable | Request access to [briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0), download it, or use transparent PNG/WebP with `background_mode=keep_alpha` |
-| MoGe missing | Automatic camera estimator weights are unavailable | Download [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe), or use `camera_mode=manual` with **Pixal3D Camera Control** |
+| PyTorch CUDA | `torch.cuda.is_available() == True` | CPU-only is not supported |
+| Attention | `flash_attn` or `flash_attn_interface` | FlashAttention 2 or 3 |
+| Sparse GEMM | `flex_gemm_ap` or `flex_gemm` | Pixal3D CUDA kernel |
+| Mesh ops | `cumesh_vb` or `cumesh` | Pixal3D CUDA kernel |
+| Voxel/export ops | `o_voxel_vb_ap` or `o_voxel` | Pixal3D CUDA kernel |
+| DRTK | `drtk` | UV/export helper |
+| Pixal3D model | `ComfyUI/models/Pixal3D/TencentARC_Pixal3D/pipeline.json` | Download manually or use `download_if_missing=true` |
+| DINOv3 helper | `ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/` | Needed by the image encoder |
+| MoGe | `ComfyUI/models/moge/moge_2_vitl_normal_fp16.safetensors` | Only needed for `camera_mode=moge` |
+| RMBG-2.0 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | Gated model; only needed for `background_mode=auto_remove` |
+| NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | Only needed for strict NAF |
 
-Windows users: start with [Windows wheel guide](docs/windows_wheels.md). Linux/WSL users: start with [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md). Do not let pip replace your working Torch install while fixing missing CUDA packages; use exact wheels or `--no-deps` where the guide says to.
+If Environment Check says a CUDA package is missing, install a wheel that exactly matches your stack. Do not let pip replace a working Torch install while testing random wheels; use `--no-deps` for manual CUDA wheels.
 
-### Platform Reality Check
+## Windows Wheel Order
 
-For the smoothest full upstream Pixal3D experience, Linux or WSL is recommended because upstream NATTEN publishes prebuilt NATTEN/libnatten wheels for recent official PyTorch CUDA stacks there.
+On Windows, install wheels in this order:
 
-Native Windows is supported and can generate/export GLBs, but it may need fallback settings unless exact Windows CUDA wheels exist for your stack. Community Windows NATTEN wheels exist for some stacks (e.g. [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) for Python 3.12, PyTorch 2.10, CUDA 13.0, sm120/RTX 5090), but the official NATTEN wheel index at `whl.natten.org` only provides Linux builds for PyTorch 2.10/2.11. Plain `natten==0.21.6` is installed for baseline imports, but if `natten.HAS_LIBNATTEN` is `False`, use `naf_mode=fallback_if_missing` instead of `strict`.
+1. PyTorch with CUDA for your GPU/driver.
+2. Required Pixal3D CUDA wheels: `flex_gemm_ap`, `cumesh_vb`, `o_voxel_vb_ap`, and `drtk`.
+3. One attention wheel: FlashAttention 2 (`flash_attn`) or FlashAttention 3 (`flash_attn_interface`).
+4. Optional strict NAF wheel: NATTEN with CUDA `libnatten`.
 
-Recommended default:
+The required Pixal3D CUDA wheels are separate from NATTEN. A working NATTEN install does not mean `flex_gemm`, `cumesh`, `o_voxel`, or `drtk` are installed.
 
-| Environment | Recommendation |
-|---|---|
-| Linux/WSL NVIDIA | Best path for full upstream NAF if official NATTEN/libnatten wheels match your Torch/CUDA |
-| Native Windows NVIDIA | Works, but use exact CUDA extension wheels and `naf_mode=fallback_if_missing` unless `natten.HAS_LIBNATTEN` is `True` |
+For Python 3.12, PyTorch 2.10, CUDA 13.0, the required Pixal3D CUDA wheels can be installed with:
 
-<details>
-<summary>Guarded Installer Policy</summary>
+```bat
+venv\Scripts\python.exe -m pip install --no-deps ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/flex_gemm_ap-latest/flex_gemm_ap-1.0.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/cumesh_vb-latest/cumesh_vb-1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/o_voxel_vb_ap-latest/o_voxel_vb_ap-0.0.1%2Bcu130torch2.10-cp312-cp312-win_amd64.whl" ^
+  "https://github.com/PozzettiAndrea/cuda-wheels/releases/download/drtk-latest/drtk-0.1.0%2Bcu130torch2.10-cp312-cp312-win_amd64.whl"
+```
 
-Some 3D ComfyUI nodes use `comfy-env` with `install.py`, `prestartup_script.py`, and `comfy-env.toml` to build isolated CUDA environments automatically. That can be convenient, but it depends on the wheel map matching the user's exact stack.
+More detail: [Windows wheel guide](docs/windows_wheels.md).
 
-Pixal3D-ComfyUI keeps the risky parts explicit:
+## Windows NATTEN / NAF
 
-- No `prestartup_script.py`
-- No automatic Torch changes
-- No automatic CUDA wheel install unless an exact known wheel map is explicitly enabled
-- No automatic model download unless `download_if_missing` is enabled
-- Normal `pip` and `uv` installs for runtime requirements
+Pixal3D uses **NAF** as a feature refinement step for the shape and texture stages. NAF uses NATTEN. Strict upstream NAF only works when NATTEN includes CUDA `libnatten`:
 
-This makes it less automatic, but safer for custom ComfyUI installs, portable ComfyUI, newer PyTorch/CUDA stacks, and users who already have working FlashAttention/Triton wheels.
+```bat
+python -c "import natten; print(natten.__version__, natten.HAS_LIBNATTEN)"
+```
 
-</details>
-
-## Compatibility
-
-This nodepack is written to import cleanly on normal ComfyUI, portable ComfyUI, venv installs, and uv-managed installs. Actual generation/export requires CUDA because Pixal3D depends on sparse attention and mesh/voxel extension wheels.
-
-The node is **not pinned to one tiny stack**. It should work on any Python/PyTorch/CUDA combo where the required extension modules import successfully inside the same ComfyUI Python environment.
-
-| Component | Supported range | Notes |
-|-----------|-----------------|-------|
-| VRAM | **20–32 GB recommended** | `1536_cascade` needs ~32 GB; `native_low_vram` can run on much lower VRAM in some workflows |
-| System RAM | **20–40 GB recommended for native low-VRAM** | Pixal3D stages large CPU-side tensors before GPU transfer |
-| OS | Windows and Linux CUDA supported; macOS import-only | macOS should not break ComfyUI import, but CUDA generation/export is not supported unless compatible deps exist |
-| Python | `3.10`-`3.13` expected if wheels exist, `3.12.1` target-friendly | Wheels must match the Python ABI, for example `cp312` for Python 3.12.x |
-| PyTorch | `2.8+` expected if wheels exist, including `2.10` | The extension wheels must match the installed Torch ABI/build |
-| CUDA | `12.8` tested, `13.x` allowed if wheels exist | Use wheels matching `torch.version.cuda`, not just the system CUDA toolkit |
-| FlashAttention 2 | `flash-attn 2.8.3`, Torch `2.8.x`, CUDA `12.8`, Python `3.12` tested | Provides the `flash_attn` module |
-| FlashAttention 2 newer stacks | Torch `2.10` / CUDA `13.x` should work if your wheel imports | Select `flash_attn_2` or use `auto` |
-| FlashAttention 3 | Torch `>=2.9` and matching wheel expected | Must provide the `flash_attn_interface` module |
-| Triton | Windows: matching `triton-windows`; Linux: matching `triton` | Required by several modern CUDA wheel stacks |
-| Required Pixal3D CUDA wheels | `flex_gemm_ap`/`flex_gemm`, `o_voxel_vb_ap`/`o_voxel`, `cumesh_vb`/`cumesh`, `drtk` | These must match Python, Torch, CUDA, and OS |
-| Optional CUDA wheels | `nvdiffrast`, `nvdiffrec_render` | Useful for renderer paths, not the basic GLB export path |
-| ComfyUI | Current ComfyUI with `CoreModelPatcher` and `load_models_gpu` | Needed for DynamicVRAM/Aimdo/MemoryVisualization visibility |
-| GPU | CUDA-capable NVIDIA GPU | Newer GPU architectures need extension wheels built for that Torch/CUDA stack |
-| CPU only | Not supported | Pixal3D sparse/mesh ops need CUDA |
-
-Example verified stack, not a required install path:
+If that prints `False`, you have normal NATTEN without CUDA libnatten. The node can still run, but you must use:
 
 ```text
-Windows
-Python 3.12
-PyTorch 2.8.0+cu128
-CUDA wheel target cu128
-flash-attn 2.8.3+cu128torch2.8.0
-triton-windows 3.5+
+Pixal3D Model Loader naf_mode=fallback_if_missing
+Pixal3D Model Loader preload_naf=false
 ```
 
-Another valid stack shape:
+Fallback mode avoids loading NAF and keeps the expected tensor shape by using DINO projection features. It is usually slower and may use more RAM/VRAM than a proper CUDA NATTEN/libnatten build, and quality can be lower than strict upstream NAF.
+
+On Windows, a NATTEN wheel must match all of these:
 
 ```text
-Windows
-Python 3.12.1
-PyTorch 2.10.x
-CUDA 13.x
-FlashAttention 2 or 3 matching Torch/CUDA/Python
-Triton matching Torch/CUDA/Python
-Pixal3D CUDA extension wheels matching Torch/CUDA/Python
+Python ABI, for example cp312
+PyTorch build, for example torch2.10
+CUDA build, for example cu130
+GPU architecture, for example sm120
+OS tag, win_amd64
 ```
 
-Use **Pixal3D Environment Check** inside ComfyUI before loading the model. It checks `torch`, CUDA, FlashAttention 2/3, Triton, `flex_gemm_ap`, `cumesh_vb`, `o_voxel_vb_ap`, and `drtk` without downloading the model.
+If you cannot find a matching Windows wheel, use fallback mode or build NATTEN from source.
 
-More setup detail:
+Known community Windows NATTEN wheels:
 
-- [Compatibility matrix](docs/compatibility_matrix.md)
-- [Portable and standalone install](docs/portable_standalone_install.md)
-- [Windows wheel guide](docs/windows_wheels.md)
-- [Related repo findings](docs/related_repos.md)
-- [Troubleshooting](docs/troubleshooting.md)
+| Python | PyTorch | CUDA | GPU | Wheel |
+|---|---|---|---|---|
+| 3.12 | 2.10 | 13.0 | Blackwell sm120 | [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) |
+| 3.12 | 2.8+ | 12.8 | Blackwell sm100/sm120 | [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) |
 
-<details>
-<summary>Production Readiness</summary>
+More detail: [Windows wheel guide](docs/windows_wheels.md) and [Build NATTEN on Windows](docs/Build_Natten_windows.md).
 
-This nodepack is close to production for Windows CUDA users who already have matching extension wheels installed, but it is not a one-click package for every environment. Release readiness depends on these checks:
+## Model Folders
 
-| Check | Status |
-|-------|--------|
-| ComfyUI import without model download | Ready |
-| Native ComfyUI MoGe folder support | Ready |
-| RMBG-2.0 gated-model note | Ready |
-| GLB export with Windows-viewer-friendly PNG textures | Ready |
-| DynamicVRAM/Aimdo model wrapper | Ready |
-| Automatic CUDA wheel installation | Opt-in exact-match installer only |
-| Exact upstream NAF on Windows | Requires a real CUDA NATTEN/libnatten wheel; fallback mode works without it |
-| Fresh-machine smoke test | Recommended before tagging a production release |
-
-Run **Pixal3D Environment Check** first. A production-capable Windows install must show the required CUDA modules importing in the same Python environment that launches ComfyUI.
-
-</details>
-
-## Model Setup
-
-The loader looks for the Pixal3D model in:
+Default model layout:
 
 ```text
-ComfyUI/models/Pixal3D/TencentARC_Pixal3D/
+ComfyUI/models/
+├── Pixal3D/
+│   ├── TencentARC_Pixal3D/
+│   │   ├── pipeline.json
+│   │   └── ckpts/*.safetensors
+│   ├── camenduru_dinov3-vitl16-pretrain-lvd1689m/
+│   └── briaai_RMBG-2.0/
+└── moge/
+    ├── moge_1_vitl_fp16.safetensors
+    └── moge_2_vitl_normal_fp16.safetensors
 ```
 
-Set `download_if_missing` to `true` on **Pixal3D Model Loader** to download `TencentARC/Pixal3D` there. The default is `false`, so the node will not download anything unless you ask it to.
+`download_if_missing=false` is the default. Turn it on only if you want the node to download helper models. `hf_endpoint` can be changed to a Hugging Face mirror if needed.
 
-Helper models also live under `ComfyUI/models/Pixal3D/`, except native ComfyUI MoGe:
+RMBG-2.0 is gated on Hugging Face. Accept the model terms and log in, set `HF_TOKEN`, or provide a transparent PNG/WebP and use `background_mode=keep_alpha` so RMBG is not needed.
 
-```text
-ComfyUI/models/Pixal3D/briaai_RMBG-2.0/
-ComfyUI/models/Pixal3D/camenduru_dinov3-vitl16-pretrain-lvd1689m/
-```
+## Recommended Loader Settings
 
-Preferred clean folder names are `owner_repo`, because Windows folders cannot use the Hugging Face slash. The Pixal3D/RMBG/DINO helpers also check common manual-download names such as `RMBG-2.0`, `Pixal3D`, and Hugging Face cache-style folders like `models--owner--repo/snapshots/<hash>/`.
-
-The model folders may be normal directories, Windows junctions, or symlinks. Broken links will be treated as missing models. Linked folders should still expose normal files such as `pipeline.json`, `.json`, `.safetensors`, and `ckpts/*.safetensors`; blob-only Hugging Face cache folders are not enough.
-
-Native ComfyUI MoGe uses [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe). Place the files directly in `ComfyUI/models/moge/`:
-
-```text
-ComfyUI/
-└── models/
-    └── moge/
-        ├── moge_1_vitl_fp16.safetensors
-        └── moge_2_vitl_normal_fp16.safetensors
-```
-
-Pixal3D-ComfyUI uses `moge_2_vitl_normal_fp16.safetensors` from that native ComfyUI folder for `camera_mode=moge`. It does not use a `Ruicheng/moge-2-vitl` snapshot folder.
-
-If `download_if_missing` is `true`, Pixal3D-ComfyUI downloads missing Comfy-Org/MoGe files into `ComfyUI/models/moge/` and missing Pixal3D helper snapshots into `ComfyUI/models/Pixal3D/`. If `download_if_missing` is `false`, Pixal3D-ComfyUI will not download these helper models. `hf_endpoint` defaults to `https://huggingface.co`; set it to a mirror such as `https://hf-mirror.com` when downloading from regions where the normal Hugging Face domain is blocked.
-
-`briaai/RMBG-2.0` is gated on Hugging Face. To use `background_mode=auto_remove`, accept the model terms and either log in with Hugging Face before launching ComfyUI, set `HF_TOKEN`, or place the downloaded snapshot in `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/`.
-
-Node downloads remove Hugging Face `.cache` metadata and `.git` folders after use. MoGe files are placed directly in `ComfyUI/models/moge/`; other helper snapshots are normalized under `ComfyUI/models/Pixal3D/`. The runtime expects normal files such as `.safetensors`, `pipeline.json`, and `ckpts/*.safetensors`, not blob-only cache directories.
-
-Torch Hub helper code for Pixal3D's NAF upsampler is redirected to:
-
-```text
-ComfyUI/models/Pixal3D/torch_hub/
-```
-
-Official TencentARC Pixal3D uses NAF for the shape and texture stages, and those released weights expect 2048-channel projected features. On Windows stacks without a matching CUDA NATTEN build, leave `naf_mode=fallback_if_missing`: the node keeps the expected tensor shape by duplicating DINO projection features and will not download NAF when `download_if_missing=false`. For exact upstream NAF behavior, install a CUDA-enabled NATTEN build for your Python/PyTorch/CUDA stack and set `naf_mode=strict`.
-
-`naf_target_size` controls real NAF only. Leave it on `upstream` for normal behavior. Lower values such as `512`, `256`, or `128` reduce NAF VRAM if strict NAF works, and are ignored by fallback mode.
-
-## Windows CUDA Wheels
-
-This node uses ComfyUI's Python environment only. Do not install these packages into system Python.
-
-For Windows, FlashAttention 2 is enough if the wheel matches your exact Python, PyTorch, and CUDA build:
-
-```bash
-cd C:\path\to\ComfyUI
-.\venv\Scripts\python.exe -m pip show flash-attn
-```
-
-Portable ComfyUI example:
-
-```bash
-cd ComfyUI_windows_portable
-.\python_embeded\python.exe -m pip install -r .\ComfyUI\custom_nodes\Pixal3D-ComfyUI\requirements.txt
-```
-
-uv example:
-
-```bash
-uv pip install --python C:\path\to\ComfyUI\venv\Scripts\python.exe -r C:\path\to\ComfyUI\custom_nodes\Pixal3D-ComfyUI\requirements.txt
-```
-
-If you use package-style install instead of requirements files, `pip install .` and `uv pip install .` install the same baseline runtime dependencies from `pyproject.toml`, including plain `natten==0.21.6`. CUDA wheels still remain manual or opt-in because they must match the exact stack.
-
-FlashAttention 3 also works if you install a wheel that provides `flash_attn_interface` for your exact Python, CUDA, and PyTorch build. Use the loader's `attention_backend` dropdown:
-
-| Option | What it uses |
-|--------|--------------|
-| `auto` | FlashAttention 3 if present, otherwise FlashAttention 2 |
-| `flash_attn_2` | `flash_attn` |
-| `flash_attn_3` | `flash_attn_interface` |
-
-Pixal3D sparse attention needs FlashAttention 2 or 3; plain PyTorch SDPA is not enough for the sparse stages.
-
-## Nodes
-
-### Pixal3D Model Loader
-
-Loads the Pixal3D pipeline and returns a Comfy-managed model handle.
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `model_repo` | `TencentARC/Pixal3D` | Hugging Face repo or local Pixal3D model folder |
-| `hf_endpoint` | `https://huggingface.co` | Hugging Face endpoint or mirror used when `download_if_missing` is enabled |
-| `attention_backend` | `auto` | `auto`, `flash_attn_2`, or `flash_attn_3` |
-| `vram_mode` | `dynamic_vram` | Best-effort Comfy/Aimdo staging with Comfy-aware torch ops |
-| `download_if_missing` | `false` | Downloads Pixal3D/helper models into `ComfyUI/models/Pixal3D/` and native MoGe into `ComfyUI/models/moge/` only when enabled |
-| `load_moge` | `true` | Load MoGe for automatic camera estimation |
-| `load_rembg` | `true` | Load gated RMBG-2.0 for built-in background removal |
-| `naf_mode` | `fallback_if_missing` | Use duplicated DINO features if CUDA NATTEN/NAF is unavailable; `strict` requires real NAF |
-| `naf_target_size` | `upstream` | Real NAF upsample size; lower values reduce VRAM and are ignored by fallback mode |
-| `preload_naf` | `false` | Preload the NAF upsampler only when `naf_mode=strict` and CUDA NATTEN/libnatten is available |
-| `force_reload` | `false` | Rebuild the cached model handle |
-
-Advanced source override: set `PIXAL3D_REPO_PATH` before launching ComfyUI if you want to use a different Pixal3D source checkout instead of the vendored source.
-
-### Pixal3D Camera Control
-
-Outputs one bundled native ComfyUI value for manual camera mode:
-
-| Output | Connect to |
-|--------|------------|
-| `manual_fov` | Optional single cable to `Pixal3D Image To 3D.manual_fov` |
-
-The optional `image` input is preview-only for the camera widget. Connect the same `Load Image` node directly to `Pixal3D Image To 3D.image`.
-
-This node only affects Pixal3D when `Pixal3D Image To 3D.camera_mode=manual`. Connect `manual_fov` to `Pixal3D Image To 3D.manual_fov`; when it is connected in manual mode, the scalar `manual_camera_angle_x`, `manual_distance`, and `mesh_scale` inputs on `Pixal3D Image To 3D` are ignored and the Camera Control values are used instead. If `camera_mode=moge`, the connected `manual_fov` is ignored, so MoGe still owns the camera estimate.
-
-The widget has a Scene view for the camera rig and a POV view for the framed camera result. POV uses the same horizontal FOV, distance, and mesh scale values that the node sends to Pixal3D. Horizontal FOV is converted to radians for `manual_camera_angle_x`, and distance/scale are passed through unchanged. It does not expose fake yaw/elevation controls because the Pixal3D manual path does not consume those values.
-
-### Pixal3D Image To 3D
-
-Runs Pixal3D from a ComfyUI `IMAGE`.
-
-Background handling is built in:
-
-| Mode | Description |
-|------|-------------|
-| `auto_remove` | Default. Uses Pixal3D/rembg to remove the background when the image has no alpha |
-| `keep_alpha` | Uses the input alpha mask when present; falls back to auto remove if there is no alpha |
-| `none` | Sends the RGB image through without background removal |
-
-Outputs:
-
-| Output | Description |
-|--------|-------------|
-| `pixal3d_result` | Pixal3D mesh, voxel attributes, latents, and camera metadata |
-
-### Pixal3D Export GLB
-
-Exports a textured GLB from `pixal3d_result`.
-
-Output files are written to `ComfyUI/output/`.
-
-Exports use embedded PNG textures for broad Windows/glTF viewer compatibility. Older Pixal3D-ComfyUI builds wrote WebP textures with `EXT_texture_webp`; those GLBs could open in some tools but fail in Windows' built-in 3D viewer.
-
-`remesh` defaults to `true` to match the Pixal3D demo path and is passed through exactly as set in the node. If cleanup creates fragmented meshes, try `remesh=false` and keep the upstream-style export defaults: `decimation_target=1000000` and `texture_size=4096`.
-
-Connect:
-
-```text
-Pixal3D Export GLB glb_path
-  -> Preview 3D & Animation model_file
-```
-
-### Pixal3D Unload Model
-
-Fully removes the loaded Pixal3D model handle from ComfyUI model management and Pixal3D-ComfyUI's Python cache. Use this when you want CPU RAM released, not only VRAM offloaded.
-
-## Recommended Workflow
-
-```text
-Load Image
-  -> Pixal3D Image To 3D image
-
-Load Image
-  -> Pixal3D Camera Control image  (optional preview only)
-
-Pixal3D Model Loader
-  -> Pixal3D Image To 3D model
-
-Pixal3D Camera Control manual_fov
-  -> Pixal3D Image To 3D manual_fov
-
-Pixal3D Image To 3D
-  -> Pixal3D Export GLB
-```
-
-Optional preview:
-
-```text
-Pixal3D Export GLB glb_path
-  -> Preview 3D & Animation model_file
-```
-
-<details>
-<summary>VRAM Modes</summary>
-
-`dynamic_vram` is the default loader mode. Pixal3D-ComfyUI builds Pixal3D with Comfy/Aimdo-aware `Linear`, `Conv`, `LayerNorm`, `GroupNorm`, and `Embedding` ops where possible, then wraps the pipeline in ComfyUI's model-management path.
-
-Pixal3D-ComfyUI keeps one active pipeline cache. Changing Model Loader settings such as `vram_mode`, `attention_backend`, helper-model toggles, or NAF settings unloads and destroys the previous handle before loading the new one. The **Pixal3D Unload Model** node also removes the active handle from the Python cache. Pixal3D-ComfyUI also hooks ComfyUI's global unload button so native unloads clear the Pixal3D cache too.
-
-Task Manager may still show some RAM held after unload because Python, PyTorch, memory-mapped safetensors, Hugging Face/Transformers imports, and Windows allocators can keep reserved pages for reuse. That is different from the Pixal3D model object still being referenced. A full ComfyUI restart is the only guaranteed way to return every reserved page to the OS immediately.
-
-Pixal3D is still not fully Comfy-native: it has custom sparse kernel modules and large temporary tensors that Aimdo cannot virtualize like a normal Comfy UNet. If Comfy still reports a large `Force pre-loaded` value or a 1536 run OOMs, use `native_low_vram` as the fallback. That mode can run in low VRAM ranges such as **4–8 GB VRAM** for smaller workflows, but it needs a lot of host memory: plan for **20–40 GB system RAM** and slower runs. It bypasses Comfy's bulk model load and lets Pixal3D move stages to GPU only when needed. In that mode the background remover is moved to GPU only for preprocessing and then returned to CPU, MoGe is moved to GPU only for camera estimation and then returned to CPU, and the upstream Pixal3D pipeline stages its flow/decoder modules one at a time.
-
-Recommended low-VRAM setup:
+General Windows baseline:
 
 | Node | Setting |
-|------|---------|
+|---|---|
+| Pixal3D Model Loader | `attention_backend=auto` |
+| Pixal3D Model Loader | `vram_mode=dynamic_vram` |
+| Pixal3D Model Loader | `naf_mode=fallback_if_missing` unless `natten.HAS_LIBNATTEN=True` |
+| Pixal3D Model Loader | `preload_naf=false` unless strict NAF works |
+| Pixal3D Image To 3D | `pipeline_type=1024_cascade` for lower VRAM, `1536_cascade` for quality |
+| Pixal3D Export GLB | `decimation_target=1000000`, `texture_size=4096` |
+
+Lowest-VRAM/manual path:
+
+| Node | Setting |
+|---|---|
 | Pixal3D Model Loader | `vram_mode=native_low_vram` |
 | Pixal3D Model Loader | `load_moge=false` |
 | Pixal3D Model Loader | `load_rembg=false` |
 | Pixal3D Image To 3D | `camera_mode=manual` |
-| Pixal3D Image To 3D | `background_mode=keep_alpha` for transparent PNG/WebP inputs |
+| Pixal3D Image To 3D | `background_mode=keep_alpha` with transparent PNG/WebP |
 | Pixal3D Camera Control | Connect `manual_fov` to `Pixal3D Image To 3D.manual_fov` |
 
-For this path, use a transparent-background PNG or WebP so Pixal3D does not need RMBG, and use **Pixal3D Camera Control** instead of MoGe for camera setup.
+`native_low_vram` moves Pixal3D stages between CPU and GPU as needed. It can reduce VRAM pressure, but it is slower and needs a lot of system RAM, often 20-40 GB.
 
-Use `full_gpu` only when you want the whole model resident on the GPU and your card has enough free VRAM.
-</details>
+## Nodes
 
-<details>
-<summary>Safety Notes</summary>
+| Node | Purpose |
+|---|---|
+| Pixal3D Environment Check | Prints installed/missing dependencies |
+| Pixal3D Model Loader | Loads Pixal3D and helper models |
+| Pixal3D Camera Control | Manual FOV, distance, and mesh scale with Scene/POV preview |
+| Pixal3D Image To 3D | Runs image-to-3D generation |
+| Pixal3D Export GLB | Exports the result to textured `.glb` |
+| Pixal3D Unload Model | Clears the Pixal3D pipeline cache and releases the model handle |
 
-- No packages are installed into system Python.
-- `install.py` uses the Python that launches it; use ComfyUI's Python or portable `python_embeded`.
-- There is no `prestartup_script.py`.
-- CUDA wheels are not installed automatically unless an exact known wheel path is explicitly enabled.
-- The model is not downloaded during ComfyUI startup.
-- `download_if_missing` is off by default.
-- Pixal3D source imports are lazy; the heavy model code loads only when the loader node runs.
-- CUDA module aliases for `cumesh`, `flex_gemm`, and `o_voxel` are created only when Pixal3D loads, and point at the installed wheel modules.
+Basic workflow:
 
-</details>
+```text
+Load Image -> Pixal3D Image To 3D image
+Pixal3D Model Loader -> Pixal3D Image To 3D model
+Pixal3D Image To 3D -> Pixal3D Export GLB
+Pixal3D Export GLB glb_path -> Preview 3D & Animation model_file
+```
 
-## Windows CUDA Wheel Resources
+Manual camera workflow:
 
-- [PozzettiAndrea/cuda-wheels](https://github.com/PozzettiAndrea/cuda-wheels/releases) — direct Windows wheels for `flex_gemm_ap`, `cumesh_vb`, `o_voxel_vb_ap`, `drtk`, and some `flash_attn` builds.
-- [visualbruno/ComfyUI-Trellis2 wheels](https://github.com/visualbruno/ComfyUI-Trellis2/tree/main/wheels) — alternate Windows wheels for `flex_gemm`, `cumesh`, `o_voxel`, `nvdiffrast`, `nvdiffrec_render`, and some NATTEN builds.
-- [Wildminder/AI-windows-whl](https://huggingface.co/Wildminder/AI-windows-whl/tree/main) — Windows AI wheel index, especially useful for FlashAttention and related AI packages.
-- [lldacing/NATTEN-windows](https://huggingface.co/lldacing/NATTEN-windows/tree/main) — Windows NATTEN wheels where available; strict NAF still requires `natten.HAS_LIBNATTEN == True`.
-- [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) — Windows NATTEN 0.21.6 wheel for Python 3.12, PyTorch 2.10, CUDA 13.0, sm120 (RTX 5090).
-- [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) — Windows NATTEN 0.21.6 wheel for Python 3.12, CUDA 12.8, Blackwell (sm100/sm120).
-- [Building NATTEN on Windows](docs/Build_Natten_windows.md) — step-by-step guide for building NATTEN from source on Windows, including MSVC and CUDA fixes.
+```text
+Load Image -> Pixal3D Camera Control image
+Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
+Pixal3D Image To 3D camera_mode=manual
+```
 
-## 🤗 Acknowledgements
+## Troubleshooting Shortcuts
 
-This project is heavily built upon [Trellis.2](https://github.com/microsoft/TRELLIS.2) and [Direct3D-S2](https://github.com/DreamTechAI/Direct3D-S2). We sincerely thank the authors for their outstanding work on scalable 3D generation, which serves as the foundation of our codebase and model architecture.
+| Symptom | Fix |
+|---|---|
+| `No module named flash_attn` | Install a matching FlashAttention 2 wheel, or FlashAttention 3 with `flash_attn_interface` |
+| `flex_gemm`, `cumesh`, `o_voxel`, or `drtk` missing | Install matching Pixal3D CUDA wheels for your Python/PyTorch/CUDA/OS |
+| `natten.HAS_LIBNATTEN=False` | Use `naf_mode=fallback_if_missing`, `preload_naf=false`, or install/build CUDA NATTEN |
+| RMBG download fails | Accept gated model terms, log in, set `HF_TOKEN`, or use transparent input with `keep_alpha` |
+| MoGe missing | Download Comfy-Org/MoGe files to `ComfyUI/models/moge/` or use manual camera mode |
+| GLB looks fragmented | Try `remesh=false`; keep `decimation_target=1000000` or higher |
+| RAM stays high after unload | Use Pixal3D Unload Model; restart ComfyUI to return all reserved Python/PyTorch memory to the OS |
 
-We also thank the following repos for their great contributions:
+See [Troubleshooting](docs/troubleshooting.md) for longer explanations.
 
-- [Direct3D-S2](https://github.com/DreamTechAI/Direct3D-S2)
-- [Trellis](https://github.com/microsoft/TRELLIS)
-- [Trellis.2](https://github.com/microsoft/TRELLIS.2)
+## Useful Links
 
-## 📄 Citation
+- [Windows wheel guide](docs/windows_wheels.md)
+- [Build NATTEN on Windows](docs/Build_Natten_windows.md)
+- [Linux/WSL CUDA guide](docs/linux_wsl_cuda.md)
+- [Portable/standalone install](docs/portable_standalone_install.md)
+- [Compatibility matrix](docs/compatibility_matrix.md)
+- [Related repositories](docs/related_repos.md)
 
-If you find this work useful, please consider citing:
+## Acknowledgements
+
+This nodepack builds on [TencentARC/Pixal3D](https://github.com/TencentARC/Pixal3D), [Trellis.2](https://github.com/microsoft/TRELLIS.2), [Trellis](https://github.com/microsoft/TRELLIS), and [Direct3D-S2](https://github.com/DreamTechAI/Direct3D-S2).
+
+If Pixal3D is useful in your work, please cite the upstream project:
 
 ```bibtex
 @article{li2026pixal3d,
