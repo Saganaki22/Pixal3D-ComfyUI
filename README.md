@@ -213,6 +213,8 @@ Pixal3D Image To 3D -> Pixal3D Export GLB
 Pixal3D Export GLB glb_path -> Preview 3D & Animation model_file
 ```
 
+Connect `Pixal3D Image To 3D rembg_image` to `Preview Image` to inspect the image Pixal3D used after background preprocessing.
+
 Manual camera workflow:
 
 ```text

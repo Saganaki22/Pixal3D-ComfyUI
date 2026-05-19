@@ -14,6 +14,7 @@ from .pixal3d_comfy import (
     environment_report,
     export_glb,
     load_pixal3d_model,
+    pil_to_tensor,
     release_pixal3d_runtime_memory,
     run_pixal3d,
     tensor_to_pil,
@@ -57,6 +58,7 @@ TOOLTIPS = {
     "max_num_tokens": "Caps high-resolution sparse tokens. Lower values reduce VRAM, but can reduce detail.",
     "force_offload": "Unload the Pixal3D model from Comfy model management after generation.",
     "pixal3d_result": "Pixal3D result from Pixal3D Image To 3D. Contains the decoded mesh and texture attributes needed for GLB export.",
+    "rembg_image": "Preview image after Pixal3D background preprocessing. Shows the RMBG-removed image when RMBG was used.",
     "decimation_target": "Target face count for textured GLB export simplification. 1000000 matches the Pixal3D demo default; very low values can shred complex models.",
     "texture_size": "Baked texture size for GLB export. 4096 matches the Pixal3D demo default and preserves more material detail.",
     "remesh": "Use Pixal3D/o_voxel remesh path during GLB export. When enabled, the node passes it through to o_voxel; disable it if cleanup fragments the mesh.",
@@ -316,8 +318,8 @@ class Pixal3DImageTo3D:
             "hidden": {"unique_id": "UNIQUE_ID"},
         }
 
-    RETURN_TYPES = ("PIXAL3D_RESULT",)
-    RETURN_NAMES = ("pixal3d_result",)
+    RETURN_TYPES = ("PIXAL3D_RESULT", "IMAGE")
+    RETURN_NAMES = ("pixal3d_result", "rembg_image")
     FUNCTION = "generate"
     CATEGORY = "Pixal3D"
 
@@ -366,7 +368,8 @@ class Pixal3DImageTo3D:
             force_offload=force_offload,
             node_id=str(unique_id) if unique_id is not None else None,
         )
-        return (result,)
+        rembg_image = getattr(result, "rembg_image", None) or pil_image
+        return (result, pil_to_tensor(rembg_image))
 
 
 class Pixal3DCameraControl:

@@ -1,60 +1,67 @@
-var E = Object.defineProperty;
-var U = (n, e, t) => e in n ? E(n, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : n[e] = t;
-var h = (n, e, t) => U(n, typeof e != "symbol" ? e + "" : e, t);
-import { app as y } from "/scripts/app.js";
-const N = "Pixal3DCameraControl", T = "pixal3d-camera-control-styles", L = 430, P = 560;
-function c(n, e, t) {
-  return Math.max(e, Math.min(t, Number(n) || 0));
+var N = Object.defineProperty;
+var H = (n, e, a) => e in n ? N(n, e, { enumerable: !0, configurable: !0, writable: !0, value: a }) : n[e] = a;
+var m = (n, e, a) => H(n, typeof e != "symbol" ? e + "" : e, a);
+import { app as P } from "/scripts/app.js";
+const U = "Pixal3DCameraControl", z = "pixal3d-camera-control-styles", x = 430, L = 560, A = 650, M = 360, C = 520, D = L / x, O = 0.64;
+function h(n, e, a) {
+  return Math.max(e, Math.min(a, Number(n) || 0));
 }
-function b(n, e) {
-  var t;
-  return (t = n.widgets) == null ? void 0 : t.find((s) => s.name === e);
+function F(n, e) {
+  var a;
+  return (a = n.widgets) == null ? void 0 : a.find((s) => s.name === e);
 }
-function S(n, e, t) {
-  var i, r, l;
-  const s = b(n, e);
+function I(n, e, a) {
+  var i, r, o;
+  const s = F(n, e);
   if (!s) return;
-  const a = s.value;
-  s.value = t, a !== t && ((i = s.callback) == null || i.call(s, t), (l = (r = y.graph) == null ? void 0 : r.setDirtyCanvas) == null || l.call(r, !0, !0));
-}
-function D(n) {
-  var t;
-  const e = (t = y.graph) == null ? void 0 : t.links;
-  return !e || n == null ? null : Array.isArray(e) ? e.find((s) => s && s.id === n) || e[n] || null : e[n] || null;
-}
-function A(n, e) {
-  var a, i, r;
-  const t = (a = n.inputs) == null ? void 0 : a.find((l) => l.name === e), s = D(t == null ? void 0 : t.link);
-  return s && ((r = (i = y.graph) == null ? void 0 : i.getNodeById) == null ? void 0 : r.call(i, s.origin_id)) || null;
+  const t = s.value;
+  s.value = a, t !== a && ((i = s.callback) == null || i.call(s, a), (o = (r = P.graph) == null ? void 0 : r.setDirtyCanvas) == null || o.call(r, !0, !0));
 }
 function R(n) {
+  var a;
+  const e = (a = P.graph) == null ? void 0 : a.links;
+  return !e || n == null ? null : Array.isArray(e) ? e.find((s) => s && s.id === n) || e[n] || null : e[n] || null;
+}
+function V(n, e) {
+  var t, i, r;
+  const a = (t = n.inputs) == null ? void 0 : t.find((o) => o.name === e), s = R(a == null ? void 0 : a.link);
+  return s && ((r = (i = P.graph) == null ? void 0 : i.getNodeById) == null ? void 0 : r.call(i, s.origin_id)) || null;
+}
+function q(n) {
   if (!n) return "";
-  let e = "", t = "input", s = "";
-  if (typeof n == "string" ? e = n : typeof n == "object" && (e = n.filename || n.name || n.image || "", t = n.type || t, s = n.subfolder || ""), !e) return "";
-  const a = new URLSearchParams();
-  return a.set("filename", e), a.set("type", t), s && a.set("subfolder", s), `/view?${a.toString()}`;
+  let e = "", a = "input", s = "";
+  if (typeof n == "string" ? e = n : typeof n == "object" && (e = n.filename || n.name || n.image || "", a = n.type || a, s = n.subfolder || ""), !e) return "";
+  const t = new URLSearchParams();
+  return t.set("filename", e), t.set("type", a), s && t.set("subfolder", s), `/view?${t.toString()}`;
 }
-function V(n) {
+function j(n) {
   var i, r;
-  const e = A(n, "image"), t = (i = e == null ? void 0 : e.imgs) == null ? void 0 : i[0], s = (t == null ? void 0 : t.currentSrc) || (t == null ? void 0 : t.src);
+  const e = V(n, "image"), a = (i = e == null ? void 0 : e.imgs) == null ? void 0 : i[0], s = (a == null ? void 0 : a.currentSrc) || (a == null ? void 0 : a.src);
   if (s) return s;
-  const a = (r = e == null ? void 0 : e.widgets) == null ? void 0 : r.find((l) => l.name === "image");
-  return R(a == null ? void 0 : a.value);
+  const t = (r = e == null ? void 0 : e.widgets) == null ? void 0 : r.find((o) => o.name === "image");
+  return q(t == null ? void 0 : t.value);
 }
-function H() {
-  if (document.getElementById(T)) return;
+function $() {
+  if (document.getElementById(z)) return;
   const n = document.createElement("style");
-  n.id = T, n.textContent = `
+  n.id = z, n.textContent = `
         .pixal3d-camera-wrap {
             box-sizing: border-box;
-            width: 100%;
-            padding: 12px;
+            width: min(100%, var(--pixal3d-camera-widget-width, 410px));
+            max-width: 100%;
+            min-width: 0;
+            margin: 0 auto;
+            padding: 8px 10px 14px;
             color: #e8edf4;
             font: 12px/1.35 Arial, Helvetica, sans-serif;
             user-select: none;
             pointer-events: auto;
+            overflow: hidden;
         }
         .pixal3d-camera-panel {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
             background: #10141b;
             border: 1px solid #354052;
             border-radius: 8px;
@@ -81,9 +88,11 @@ function H() {
             white-space: nowrap;
         }
         .pixal3d-camera-canvas {
+            box-sizing: border-box;
             display: block;
             width: 100%;
-            height: 250px;
+            height: var(--pixal3d-camera-canvas-height, 250px);
+            max-width: 100%;
             background: #0c1016;
             cursor: crosshair;
         }
@@ -153,29 +162,31 @@ function H() {
         }
     `, document.head.appendChild(n);
 }
-class j {
+class G {
   constructor(e) {
-    h(this, "node");
-    h(this, "dragStart");
-    h(this, "image");
-    h(this, "imageUrl");
-    h(this, "imageFailed", !1);
-    h(this, "container", null);
-    h(this, "canvas", null);
-    h(this, "readout", null);
-    h(this, "imageWatchTimer", null);
-    h(this, "inputs", {});
-    h(this, "fov", 49.134);
-    h(this, "distance", 2);
-    h(this, "scale", 1);
-    h(this, "viewMode", "scene");
+    m(this, "node");
+    m(this, "dragStart");
+    m(this, "image");
+    m(this, "imageUrl");
+    m(this, "imageFailed", !1);
+    m(this, "container", null);
+    m(this, "canvas", null);
+    m(this, "readout", null);
+    m(this, "imageWatchTimer", null);
+    m(this, "resizeObserver", null);
+    m(this, "inputs", {});
+    m(this, "fov", 49.134);
+    m(this, "distance", 2);
+    m(this, "scale", 1);
+    m(this, "viewMode", "scene");
     this.node = e, this.dragStart = null, this.image = new Image(), this.image.decoding = "async", this.imageUrl = "", this.create(), this.syncFromWidgets(), this.updateLinkedImage(), this.startImageWatcher(), this.draw();
   }
   destroy() {
-    this.imageWatchTimer != null && (window.clearInterval(this.imageWatchTimer), this.imageWatchTimer = null), this.container = null, this.canvas = null;
+    var e;
+    this.imageWatchTimer != null && (window.clearInterval(this.imageWatchTimer), this.imageWatchTimer = null), (e = this.resizeObserver) == null || e.disconnect(), this.resizeObserver = null, this.container = null, this.canvas = null;
   }
   create() {
-    H(), this.container = document.createElement("div"), this.container.className = "pixal3d-camera-wrap", this.container.innerHTML = `
+    $(), this.container = document.createElement("div"), this.container.className = "pixal3d-camera-wrap", this.container.innerHTML = `
             <div class="pixal3d-camera-panel">
                 <div class="pixal3d-camera-head">
                     <div class="pixal3d-camera-title">Manual Camera</div>
@@ -219,61 +230,71 @@ class j {
       scale: this.container.querySelector('[data-key="mesh_scale"]'),
       scaleNum: this.container.querySelector('[data-key="mesh_scale_num"]')
     };
-    const e = (a) => this.setValues({ fov: c(a, 5, 140) }), t = (a) => this.setValues({ distance: c(a, 0.1, 20) }), s = (a) => this.setValues({ scale: c(a, 0.05, 10) });
-    this.inputs.fov.addEventListener("input", (a) => e(a.target.value)), this.inputs.fovNum.addEventListener("change", (a) => e(a.target.value)), this.inputs.distance.addEventListener("input", (a) => t(a.target.value)), this.inputs.distanceNum.addEventListener("change", (a) => t(a.target.value)), this.inputs.scale.addEventListener("input", (a) => s(a.target.value)), this.inputs.scaleNum.addEventListener("change", (a) => s(a.target.value)), this.container.querySelectorAll("[data-preset]").forEach((a) => {
-      const i = a;
+    const e = (t) => this.setValues({ fov: h(t, 5, 140) }), a = (t) => this.setValues({ distance: h(t, 0.1, 20) }), s = (t) => this.setValues({ scale: h(t, 0.05, 10) });
+    this.inputs.fov.addEventListener("input", (t) => e(t.target.value)), this.inputs.fovNum.addEventListener("change", (t) => e(t.target.value)), this.inputs.distance.addEventListener("input", (t) => a(t.target.value)), this.inputs.distanceNum.addEventListener("change", (t) => a(t.target.value)), this.inputs.scale.addEventListener("input", (t) => s(t.target.value)), this.inputs.scaleNum.addEventListener("change", (t) => s(t.target.value)), this.container.querySelectorAll("[data-preset]").forEach((t) => {
+      const i = t;
       i.addEventListener("click", () => this.applyPreset(i.dataset.preset));
-    }), this.container.querySelectorAll("[data-view]").forEach((a) => {
-      const i = a;
+    }), this.container.querySelectorAll("[data-view]").forEach((t) => {
+      const i = t;
       i.addEventListener("click", () => {
         this.viewMode = i.dataset.view === "pov" ? "pov" : "scene", this.updateControls(), this.draw();
       });
-    }), this.canvas.addEventListener("pointerdown", (a) => {
+    }), this.container.addEventListener("wheel", (t) => {
+      t.stopPropagation();
+    }, { passive: !0 }), this.canvas.addEventListener("pointerdown", (t) => {
       var i, r;
       this.dragStart = {
-        x: a.clientX,
-        y: a.clientY,
+        x: t.clientX,
+        y: t.clientY,
         fov: this.fov,
         distance: this.distance
-      }, (r = (i = this.canvas).setPointerCapture) == null || r.call(i, a.pointerId);
-    }), this.canvas.addEventListener("pointermove", (a) => {
+      }, (r = (i = this.canvas).setPointerCapture) == null || r.call(i, t.pointerId);
+    }), this.canvas.addEventListener("pointermove", (t) => {
       if (!this.dragStart) return;
-      const i = a.clientX - this.dragStart.x, r = a.clientY - this.dragStart.y;
+      const i = t.clientX - this.dragStart.x, r = t.clientY - this.dragStart.y;
       this.setValues({
-        fov: c(this.dragStart.fov + i * 0.25, 5, 140),
-        distance: c(this.dragStart.distance + r * 0.035, 0.1, 20)
+        fov: h(this.dragStart.fov + i * 0.25, 5, 140),
+        distance: h(this.dragStart.distance + r * 0.035, 0.1, 20)
       });
     }), this.canvas.addEventListener("pointerup", () => {
       this.dragStart = null;
     }), this.canvas.addEventListener("pointercancel", () => {
       this.dragStart = null;
-    }), this.canvas.addEventListener("wheel", (a) => {
-      a.preventDefault(), this.setValues({ distance: c(this.distance + Math.sign(a.deltaY) * 0.2, 0.1, 20) });
-    }, { passive: !1 }), this.node.addDOMWidget("camera_ui", "div", this.container, { serialize: !1 });
+    }), this.canvas.addEventListener("wheel", (t) => {
+      t.preventDefault(), t.stopPropagation(), this.setValues({ distance: h(this.distance + Math.sign(t.deltaY) * 0.2, 0.1, 20) });
+    }, { passive: !1 }), this.node.addDOMWidget("camera_ui", "div", this.container, { serialize: !1 }), "ResizeObserver" in window && (this.resizeObserver = new ResizeObserver(() => this.draw()), this.resizeObserver.observe(this.container)), window.requestAnimationFrame(() => this.draw());
+  }
+  syncLayout() {
+    var o, d;
+    if (!this.container || !this.canvas) return;
+    const e = Math.max(280, Number((d = (o = this.node) == null ? void 0 : o.size) == null ? void 0 : d[0]) || x), a = Math.max(240, e - 22);
+    this.container.style.setProperty("--pixal3d-camera-widget-width", `${a}px`);
+    const s = this.container.querySelector(".pixal3d-camera-panel"), t = this.canvas.offsetWidth || (s == null ? void 0 : s.clientWidth) || a - 22, i = Math.max(220, Math.floor(t)), r = Math.max(180, Math.round(i * O));
+    this.container.style.setProperty("--pixal3d-camera-canvas-height", `${r}px`), (this.canvas.width !== i || this.canvas.height !== r) && (this.canvas.width = i, this.canvas.height = r);
   }
   syncFromWidgets() {
-    var e, t, s;
-    this.fov = c(((e = b(this.node, "fov_degrees")) == null ? void 0 : e.value) ?? 49.134, 5, 140), this.distance = c(((t = b(this.node, "distance")) == null ? void 0 : t.value) ?? 2, 0.1, 20), this.scale = c(((s = b(this.node, "mesh_scale")) == null ? void 0 : s.value) ?? 1, 0.05, 10), this.updateControls();
+    var e, a, s;
+    this.fov = h(((e = F(this.node, "fov_degrees")) == null ? void 0 : e.value) ?? 49.134, 5, 140), this.distance = h(((a = F(this.node, "distance")) == null ? void 0 : a.value) ?? 2, 0.1, 20), this.scale = h(((s = F(this.node, "mesh_scale")) == null ? void 0 : s.value) ?? 1, 0.05, 10), this.updateControls();
   }
   setValues(e) {
-    e.fov != null && (this.fov = c(e.fov, 5, 140)), e.distance != null && (this.distance = c(e.distance, 0.1, 20)), e.scale != null && (this.scale = c(e.scale, 0.05, 10)), S(this.node, "fov_degrees", Number(this.fov.toFixed(3))), S(this.node, "distance", Number(this.distance.toFixed(3))), S(this.node, "mesh_scale", Number(this.scale.toFixed(3))), this.updateControls(), this.draw();
+    e.fov != null && (this.fov = h(e.fov, 5, 140)), e.distance != null && (this.distance = h(e.distance, 0.1, 20)), e.scale != null && (this.scale = h(e.scale, 0.05, 10)), I(this.node, "fov_degrees", Number(this.fov.toFixed(3))), I(this.node, "distance", Number(this.distance.toFixed(3))), I(this.node, "mesh_scale", Number(this.scale.toFixed(3))), this.updateControls(), this.draw();
   }
   applyPreset(e) {
-    const t = {
+    const a = {
       default: { fov: 49.134, distance: 2, scale: 1 },
       wide: { fov: 65, distance: 2.8, scale: 1 },
       close: { fov: 38, distance: 1.45, scale: 1 },
       flat: { fov: 24, distance: 3.2, scale: 1 }
     };
-    this.setValues(t[e] || t.default);
+    this.setValues(a[e] || a.default);
   }
   updateControls() {
-    var t;
+    var a;
     this.inputs.fov.value = String(this.fov), this.inputs.fovNum.value = this.fov.toFixed(3), this.inputs.distance.value = String(this.distance), this.inputs.distanceNum.value = this.distance.toFixed(3), this.inputs.scale.value = String(this.scale), this.inputs.scaleNum.value = this.scale.toFixed(3);
     const e = this.fov * Math.PI / 180;
-    this.readout.textContent = `${this.viewMode.toUpperCase()} | ${e.toFixed(4)} rad`, (t = this.container) == null || t.querySelectorAll("[data-view]").forEach((s) => {
-      const a = s;
-      a.classList.toggle("is-active", a.dataset.view === this.viewMode);
+    this.readout.textContent = `${this.viewMode.toUpperCase()} | ${e.toFixed(4)} rad`, (a = this.container) == null || a.querySelectorAll("[data-view]").forEach((s) => {
+      const t = s;
+      t.classList.toggle("is-active", t.dataset.view === this.viewMode);
     });
   }
   startImageWatcher() {
@@ -282,97 +303,110 @@ class j {
     }, 400));
   }
   updateLinkedImage() {
-    const e = V(this.node);
+    const e = j(this.node);
     return e && e !== this.imageUrl ? (this.imageUrl = e, this.imageFailed = !1, this.image.onload = () => {
       this.imageFailed = !1, this.draw();
     }, this.image.onerror = () => {
       this.imageFailed = !0, this.draw();
     }, this.image.src = e, !0) : !e && this.imageUrl ? (this.imageUrl = "", this.imageFailed = !1, this.image.removeAttribute("src"), !0) : !1;
   }
-  pathRoundRect(e, t, s, a, i, r) {
-    e.beginPath(), e.roundRect ? e.roundRect(t, s, a, i, r) : e.rect(t, s, a, i);
+  pathRoundRect(e, a, s, t, i, r) {
+    e.beginPath(), e.roundRect ? e.roundRect(a, s, t, i, r) : e.rect(a, s, t, i);
   }
-  drawFloorGrid(e, t, s, a) {
+  drawFloorGrid(e, a, s, t) {
     e.save(), e.strokeStyle = "rgba(116, 135, 162, 0.18)", e.lineWidth = 1;
     for (let i = -8; i <= 8; i++) {
-      const r = t / 2 + i * 18;
-      e.beginPath(), e.moveTo(r, s), e.lineTo(t / 2 + i * 4, a), e.stroke();
+      const r = a / 2 + i * 18;
+      e.beginPath(), e.moveTo(r, s), e.lineTo(a / 2 + i * 4, t), e.stroke();
     }
     for (let i = 0; i <= 9; i++) {
-      const r = i / 9, l = a + (s - a) * (r * r);
-      e.beginPath(), e.moveTo(0, l), e.lineTo(t, l), e.stroke();
+      const r = i / 9, o = t + (s - t) * (r * r);
+      e.beginPath(), e.moveTo(0, o), e.lineTo(a, o), e.stroke();
     }
     e.restore();
   }
-  drawImageCard(e, t, s, a, i, r = "image preview") {
-    if (e.save(), e.fillStyle = "#17202c", e.strokeStyle = "#d8e7ff", e.lineWidth = 2, this.pathRoundRect(e, t, s, a, i, 8), e.fill(), e.stroke(), this.image.complete && this.image.naturalWidth > 0) {
+  drawImageCard(e, a, s, t, i, r = "image preview") {
+    if (e.save(), e.fillStyle = "#17202c", e.strokeStyle = "#d8e7ff", e.lineWidth = 2, this.pathRoundRect(e, a, s, t, i, 8), e.fill(), e.stroke(), this.image.complete && this.image.naturalWidth > 0) {
       e.clip();
-      const l = Math.max(a / this.image.naturalWidth, i / this.image.naturalHeight), o = this.image.naturalWidth * l, d = this.image.naturalHeight * l;
-      e.drawImage(this.image, t + (a - o) / 2, s + (i - d) / 2, o, d);
+      const o = Math.max(t / this.image.naturalWidth, i / this.image.naturalHeight), d = this.image.naturalWidth * o, u = this.image.naturalHeight * o;
+      e.drawImage(this.image, a + (t - d) / 2, s + (i - u) / 2, d, u);
     } else {
       e.fillStyle = "#758399", e.font = "12px Arial", e.textAlign = "center";
-      const l = this.imageFailed ? "image unavailable" : this.imageUrl ? "image loading" : r;
-      e.fillText(l, t + a / 2, s + i / 2 + 4);
+      const o = this.imageFailed ? "image unavailable" : this.imageUrl ? "image loading" : r;
+      e.fillText(o, a + t / 2, s + i / 2 + 4);
     }
     e.restore();
   }
-  drawScene(e, t, s) {
-    const a = this.fov * Math.PI / 180, i = t / 2, r = 92, l = s - 30, o = c(l - this.distance * 42, 54, l - 46), d = c(1.1 / Math.max(this.distance, 0.35), 0.34, 1.45) * Math.sqrt(this.scale), u = 82 * d, f = 92 * d, m = c(Math.tan(a / 2) * this.distance * 42, 18, t / 2 - 24);
-    this.drawFloorGrid(e, t, s, r), e.save(), e.fillStyle = "rgba(79, 180, 255, 0.15)", e.strokeStyle = "#4fb4ff", e.lineWidth = 2, e.beginPath(), e.moveTo(i, l), e.lineTo(i - m, o), e.lineTo(i + m, o), e.closePath(), e.fill(), e.stroke(), e.strokeStyle = "rgba(255,255,255,0.58)", e.setLineDash([5, 5]), e.beginPath(), e.moveTo(i, l), e.lineTo(i, o), e.stroke(), e.setLineDash([]), e.fillStyle = "rgba(255,207,90,0.18)", e.strokeStyle = "#ffcf5a", e.lineWidth = 2, e.beginPath(), e.arc(i, o, 12 + u * 0.25, 0, Math.PI * 2), e.fill(), e.stroke(), this.drawImageCard(e, i - u / 2, o - f / 2, u, f, "target"), e.fillStyle = "#ffcf5a", e.strokeStyle = "#18110a", e.lineWidth = 2, e.beginPath(), e.moveTo(i, l - 15), e.lineTo(i - 18, l + 15), e.lineTo(i + 18, l + 15), e.closePath(), e.fill(), e.stroke(), e.fillStyle = "#151b24", e.fillRect(i - 8, l - 2, 16, 10), e.fillStyle = "#dbe8fa", e.font = "12px Arial", e.textAlign = "left", e.fillText("Scene rig", 12, 20), e.fillText(`FOV ${this.fov.toFixed(1)} deg`, 12, 38), e.fillText(`distance ${this.distance.toFixed(2)}`, 12, 56), e.textAlign = "right", e.fillText(`view width ${(2 * this.distance * Math.tan(a / 2)).toFixed(2)}`, t - 12, 20), e.restore();
+  drawScene(e, a, s) {
+    const t = this.fov * Math.PI / 180, i = a / 2, r = 92, o = s - 30, d = h(o - this.distance * 42, 54, o - 46), u = h(1.1 / Math.max(this.distance, 0.35), 0.34, 1.45) * Math.sqrt(this.scale), p = 82 * u, l = 92 * u, c = h(Math.tan(t / 2) * this.distance * 42, 18, a / 2 - 24);
+    this.drawFloorGrid(e, a, s, r), e.save(), e.fillStyle = "rgba(79, 180, 255, 0.15)", e.strokeStyle = "#4fb4ff", e.lineWidth = 2, e.beginPath(), e.moveTo(i, o), e.lineTo(i - c, d), e.lineTo(i + c, d), e.closePath(), e.fill(), e.stroke(), e.strokeStyle = "rgba(255,255,255,0.58)", e.setLineDash([5, 5]), e.beginPath(), e.moveTo(i, o), e.lineTo(i, d), e.stroke(), e.setLineDash([]), e.fillStyle = "rgba(255,207,90,0.18)", e.strokeStyle = "#ffcf5a", e.lineWidth = 2, e.beginPath(), e.arc(i, d, 12 + p * 0.25, 0, Math.PI * 2), e.fill(), e.stroke(), this.drawImageCard(e, i - p / 2, d - l / 2, p, l, "target"), e.fillStyle = "#ffcf5a", e.strokeStyle = "#18110a", e.lineWidth = 2, e.beginPath(), e.moveTo(i, o - 15), e.lineTo(i - 18, o + 15), e.lineTo(i + 18, o + 15), e.closePath(), e.fill(), e.stroke(), e.fillStyle = "#151b24", e.fillRect(i - 8, o - 2, 16, 10), e.fillStyle = "#dbe8fa", e.font = "12px Arial", e.textAlign = "left", e.fillText("Scene rig", 12, 20), e.fillText(`FOV ${this.fov.toFixed(1)} deg`, 12, 38), e.fillText(`distance ${this.distance.toFixed(2)}`, 12, 56), e.textAlign = "right", e.fillText(`view width ${(2 * this.distance * Math.tan(t / 2)).toFixed(2)}`, a - 12, 20), e.restore();
   }
-  drawPov(e, t, s) {
-    const a = this.fov * Math.PI / 180, i = 18, r = 16, l = t - 36, o = s - 42, d = i + l / 2, u = r + o / 2, f = !this.imageFailed && this.image.complete && this.image.naturalWidth > 0 ? this.image.naturalWidth / this.image.naturalHeight : 0.8, m = l / 2 / Math.tan(a / 2), k = 1 * this.scale, I = k / c(f, 0.55, 1.65), W = k * m / Math.max(this.distance, 0.05), M = I * m / Math.max(this.distance, 0.05), w = c(W, 12, l * 3.2), g = c(M, 12, o * 3.2), _ = W / Math.max(l * 0.34, 1), C = 2 * this.distance * Math.tan(a / 2);
+  drawPov(e, a, s) {
+    const t = this.fov * Math.PI / 180, i = 18, r = 16, o = a - 36, d = s - 42, u = i + o / 2, p = r + d / 2, l = !this.imageFailed && this.image.complete && this.image.naturalWidth > 0 ? this.image.naturalWidth / this.image.naturalHeight : 0.8, c = o / 2 / Math.tan(t / 2), f = 1 * this.scale, v = f / h(l, 0.55, 1.65), S = f * c / Math.max(this.distance, 0.05), y = v * c / Math.max(this.distance, 0.05), g = h(S, 12, o * 3.2), w = h(y, 12, d * 3.2), W = S / Math.max(o * 0.34, 1), T = 2 * this.distance * Math.tan(t / 2);
     e.save();
-    const v = e.createLinearGradient(0, r, 0, r + o);
-    v.addColorStop(0, "#18202b"), v.addColorStop(0.58, "#0f151d"), v.addColorStop(1, "#0a0e14"), e.fillStyle = v, this.pathRoundRect(e, i, r, l, o, 10), e.fill(), e.strokeStyle = "#8fcfff", e.lineWidth = 2, e.stroke(), e.clip(), e.strokeStyle = "rgba(255,255,255,0.10)", e.lineWidth = 1;
-    const x = C / 2;
-    for (let p = -4; p <= 4; p++) {
-      const F = d + p / 4 * m * (x / Math.max(this.distance, 0.05));
-      e.beginPath(), e.moveTo(F, r), e.lineTo(F, r + o), e.stroke();
+    const k = e.createLinearGradient(0, r, 0, r + d);
+    k.addColorStop(0, "#18202b"), k.addColorStop(0.58, "#0f151d"), k.addColorStop(1, "#0a0e14"), e.fillStyle = k, this.pathRoundRect(e, i, r, o, d, 10), e.fill(), e.strokeStyle = "#8fcfff", e.lineWidth = 2, e.stroke(), e.clip(), e.strokeStyle = "rgba(255,255,255,0.10)", e.lineWidth = 1;
+    const E = T / 2;
+    for (let b = -4; b <= 4; b++) {
+      const _ = u + b / 4 * c * (E / Math.max(this.distance, 0.05));
+      e.beginPath(), e.moveTo(_, r), e.lineTo(_, r + d), e.stroke();
     }
-    for (let p = 1; p < 3; p++)
-      e.beginPath(), e.moveTo(i, r + o * p / 3), e.lineTo(i + l, r + o * p / 3), e.stroke();
-    e.fillStyle = "rgba(79,180,255,0.10)", e.beginPath(), e.ellipse(d, u + g * 0.44, w * 0.58, g * 0.09, 0, 0, Math.PI * 2), e.fill(), this.drawImageCard(e, d - w / 2, u - g / 2, w, g, "camera view"), e.strokeStyle = "rgba(255,255,255,0.62)", e.setLineDash([4, 6]), e.beginPath(), e.moveTo(d - 15, u), e.lineTo(d + 15, u), e.moveTo(d, u - 15), e.lineTo(d, u + 15), e.stroke(), e.setLineDash([]), e.restore(), e.save(), e.fillStyle = "#dbe8fa", e.font = "12px Arial", e.textAlign = "left", e.fillText(`POV FOV ${this.fov.toFixed(1)} deg`, 12, s - 12), e.textAlign = "right", e.fillText(`view width ${C.toFixed(2)} | scale ${_.toFixed(2)}x`, t - 12, s - 12), e.restore();
+    for (let b = 1; b < 3; b++)
+      e.beginPath(), e.moveTo(i, r + d * b / 3), e.lineTo(i + o, r + d * b / 3), e.stroke();
+    e.fillStyle = "rgba(79,180,255,0.10)", e.beginPath(), e.ellipse(u, p + w * 0.44, g * 0.58, w * 0.09, 0, 0, Math.PI * 2), e.fill(), this.drawImageCard(e, u - g / 2, p - w / 2, g, w, "camera view"), e.strokeStyle = "rgba(255,255,255,0.62)", e.setLineDash([4, 6]), e.beginPath(), e.moveTo(u - 15, p), e.lineTo(u + 15, p), e.moveTo(u, p - 15), e.lineTo(u, p + 15), e.stroke(), e.setLineDash([]), e.restore(), e.save(), e.fillStyle = "#dbe8fa", e.font = "12px Arial", e.textAlign = "left", e.fillText(`POV FOV ${this.fov.toFixed(1)} deg`, 12, s - 12), e.textAlign = "right", e.fillText(`view width ${T.toFixed(2)} | scale ${W.toFixed(2)}x`, a - 12, s - 12), e.restore();
   }
   draw() {
     if (!this.canvas) return;
-    this.updateLinkedImage();
+    this.syncLayout(), this.updateLinkedImage();
     const e = this.canvas.getContext("2d");
     if (!e) return;
-    const t = this.canvas.width, s = this.canvas.height;
-    e.clearRect(0, 0, t, s), e.fillStyle = "#0c1016", e.fillRect(0, 0, t, s), this.viewMode === "pov" ? this.drawPov(e, t, s) : this.drawScene(e, t, s);
+    const a = this.canvas.width, s = this.canvas.height;
+    e.clearRect(0, 0, a, s), e.fillStyle = "#0c1016", e.fillRect(0, 0, a, s), this.viewMode === "pov" ? this.drawPov(e, a, s) : this.drawScene(e, a, s);
   }
 }
-y.registerExtension({
+P.registerExtension({
   name: "Pixal3D.CameraControl",
   async beforeRegisterNodeDef(n, e) {
-    if (e.name !== N) return;
-    const t = n.prototype.onNodeCreated, s = n.prototype.onConfigure, a = n.prototype.onConnectionsChange;
-    function i(o) {
-      for (const d of o.widgets || [])
-        ["fov_degrees", "distance", "mesh_scale"].includes(d.name) && (d.hidden = !0, d.computeSize = () => [0, -4]);
+    if (e.name !== U) return;
+    const a = n.prototype.onNodeCreated, s = n.prototype.onConfigure, t = n.prototype.onConnectionsChange;
+    function i(l) {
+      for (const c of l.widgets || [])
+        ["fov_degrees", "distance", "mesh_scale"].includes(c.name) && (c.hidden = !0, c.computeSize = () => [0, -4]);
     }
-    function r(o) {
-      var d;
-      i(o), o.pixal3dCameraUI ? (o.pixal3dCameraUI.syncFromWidgets(), o.pixal3dCameraUI.draw()) : o.pixal3dCameraUI = new j(o), (d = o.setSize) == null || d.call(o, [L, P]);
+    function r(l) {
+      return Math.max(C, Math.round(l * D));
+    }
+    function o(l) {
+      var g, w, W;
+      const c = Number((g = l.size) == null ? void 0 : g[0]) || 0, f = Number((w = l.size) == null ? void 0 : w[1]) || 0, v = Math.max(c || x, M), y = Math.abs(f - A) <= 1 ? L : Math.max(f || r(v), C);
+      l.min_size = [M, C], l.minSize = [M, C], (v !== c || y !== f) && ((W = l.setSize) == null || W.call(l, [v, y]));
+    }
+    function d(l) {
+      i(l), l.pixal3dCameraUI ? (l.pixal3dCameraUI.syncFromWidgets(), l.pixal3dCameraUI.draw()) : l.pixal3dCameraUI = new G(l), o(l);
     }
     n.prototype.onNodeCreated = function() {
-      const o = t == null ? void 0 : t.apply(this, arguments);
-      return this.serialize_widgets = !0, this.resizable = !1, r(this), o;
+      const l = a == null ? void 0 : a.apply(this, arguments);
+      return this.serialize_widgets = !0, this.resizable = !0, this.resizeable = !0, d(this), l;
     }, n.prototype.onConfigure = function() {
-      const o = s == null ? void 0 : s.apply(this, arguments);
-      return setTimeout(() => r(this), 0), o;
+      const l = s == null ? void 0 : s.apply(this, arguments);
+      return setTimeout(() => d(this), 0), l;
     }, n.prototype.onConnectionsChange = function() {
-      var d, u;
-      const o = a == null ? void 0 : a.apply(this, arguments);
-      return (d = this.pixal3dCameraUI) == null || d.updateLinkedImage(), (u = this.pixal3dCameraUI) == null || u.draw(), o;
-    }, n.prototype.computeSize = function() {
-      return [L, P];
+      var c, f;
+      const l = t == null ? void 0 : t.apply(this, arguments);
+      return (c = this.pixal3dCameraUI) == null || c.updateLinkedImage(), (f = this.pixal3dCameraUI) == null || f.draw(), l;
     };
-    const l = n.prototype.onRemoved;
+    const u = n.prototype.onResize;
+    n.prototype.onResize = function() {
+      var v, S, y, g;
+      const l = u == null ? void 0 : u.apply(this, arguments), c = Math.max(M, Number((v = this.size) == null ? void 0 : v[0]) || x), f = r(c);
+      return Math.abs((Number((S = this.size) == null ? void 0 : S[1]) || 0) - f) > 1 && ((y = this.setSize) == null || y.call(this, [c, f])), (g = this.pixal3dCameraUI) == null || g.draw(), l;
+    }, n.prototype.computeSize = function() {
+      return [x, L];
+    };
+    const p = n.prototype.onRemoved;
     n.prototype.onRemoved = function() {
-      var o;
-      return (o = this.pixal3dCameraUI) == null || o.destroy(), this.pixal3dCameraUI = null, l == null ? void 0 : l.apply(this, arguments);
+      var l;
+      return (l = this.pixal3dCameraUI) == null || l.destroy(), this.pixal3dCameraUI = null, p == null ? void 0 : p.apply(this, arguments);
     };
   }
 });

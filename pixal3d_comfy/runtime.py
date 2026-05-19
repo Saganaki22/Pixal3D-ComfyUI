@@ -813,6 +813,13 @@ def pil_to_tensor(image: Image.Image) -> torch.Tensor:
     return torch.from_numpy(arr)[None]
 
 
+def _pil_has_useful_alpha(image: Image.Image) -> bool:
+    if image.mode != "RGBA":
+        return False
+    alpha = np.asarray(image.getchannel("A"))
+    return bool(np.any(alpha < 255))
+
+
 def configure_torch_hub_cache() -> None:
     hub_dir = pixal3d_models_dir() / "torch_hub"
     hub_dir.mkdir(parents=True, exist_ok=True)
@@ -1196,6 +1203,8 @@ class Pixal3DResult:
     resolution: int
     attr_layout: dict[str, slice]
     camera_params: dict[str, float]
+    rembg_image: Image.Image | None = None
+    rembg_used: bool = False
 
 
 def prune_stale_loaded_models() -> None:
@@ -1459,6 +1468,7 @@ def run_pixal3d(
 
     try:
         model_management.throw_exception_if_processing_interrupted()
+        rembg_used = False
         if background_mode == "auto_remove":
             if _rembg_is_disabled(pipeline):
                 raise RuntimeError(
@@ -1466,20 +1476,22 @@ def run_pixal3d(
                     "Either set Pixal3D Model Loader load_rembg=true and download/provide briaai/RMBG-2.0, "
                     "or use background_mode=none / keep_alpha."
                 )
+            rembg_used = not _pil_has_useful_alpha(image)
             _move_rembg_model(pipeline, device)
             image_preprocessed = pipeline.preprocess_image(image.convert("RGBA" if image.mode == "RGBA" else "RGB"))
             if handle.vram_mode == "native_low_vram":
                 _release_cached_memory()
         elif background_mode == "keep_alpha":
-            if image.mode != "RGBA":
+            if not _pil_has_useful_alpha(image):
                 if _rembg_is_disabled(pipeline):
                     raise RuntimeError(
                         "background_mode=keep_alpha received no alpha channel and RMBG is disabled. "
                         "Use an RGBA image with alpha, use background_mode=none, or enable load_rembg."
                     )
-                LOGGER.warning("background_mode=keep_alpha received no alpha channel; using auto_remove.")
+                LOGGER.warning("background_mode=keep_alpha received no usable alpha channel; using auto_remove.")
+                rembg_used = True
                 _move_rembg_model(pipeline, device)
-                image_preprocessed = pipeline.preprocess_image(image.convert("RGB"))
+                image_preprocessed = pipeline.preprocess_image(image.convert("RGBA" if image.mode == "RGBA" else "RGB"))
                 if handle.vram_mode == "native_low_vram":
                     _release_cached_memory()
             else:
@@ -1552,6 +1564,8 @@ def run_pixal3d(
             resolution=int(resolution),
             attr_layout=dict(pipeline.pbr_attr_layout),
             camera_params=camera_params,
+            rembg_image=image_preprocessed.copy(),
+            rembg_used=rembg_used,
         )
         del shape_slat, tex_slat, mesh_list
         _release_cached_memory()

@@ -6,6 +6,11 @@ const NODE_NAME = "Pixal3DCameraControl";
 const STYLE_ID = "pixal3d-camera-control-styles";
 const DEFAULT_WIDTH = 430;
 const DEFAULT_HEIGHT = 560;
+const OLD_FORCED_HEIGHT = 650;
+const MIN_WIDTH = 360;
+const MIN_HEIGHT = 520;
+const NODE_ASPECT = DEFAULT_HEIGHT / DEFAULT_WIDTH;
+const CANVAS_ASPECT = 0.64;
 type ViewMode = "scene" | "pov";
 
 function clamp(value, min, max) {
@@ -82,14 +87,21 @@ function injectCSS() {
     style.textContent = `
         .pixal3d-camera-wrap {
             box-sizing: border-box;
-            width: 100%;
-            padding: 12px;
+            width: min(100%, var(--pixal3d-camera-widget-width, 410px));
+            max-width: 100%;
+            min-width: 0;
+            margin: 0 auto;
+            padding: 8px 10px 14px;
             color: #e8edf4;
             font: 12px/1.35 Arial, Helvetica, sans-serif;
             user-select: none;
             pointer-events: auto;
+            overflow: hidden;
         }
         .pixal3d-camera-panel {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
             background: #10141b;
             border: 1px solid #354052;
             border-radius: 8px;
@@ -116,9 +128,11 @@ function injectCSS() {
             white-space: nowrap;
         }
         .pixal3d-camera-canvas {
+            box-sizing: border-box;
             display: block;
             width: 100%;
-            height: 250px;
+            height: var(--pixal3d-camera-canvas-height, 250px);
+            max-width: 100%;
             background: #0c1016;
             cursor: crosshair;
         }
@@ -200,6 +214,7 @@ class Pixal3DCameraUI {
     canvas: HTMLCanvasElement | null = null;
     readout: HTMLElement | null = null;
     imageWatchTimer: number | null = null;
+    resizeObserver: ResizeObserver | null = null;
     inputs: any = {};
     fov = 49.134;
     distance = 2.0;
@@ -224,6 +239,8 @@ class Pixal3DCameraUI {
             window.clearInterval(this.imageWatchTimer);
             this.imageWatchTimer = null;
         }
+        this.resizeObserver?.disconnect();
+        this.resizeObserver = null;
         this.container = null;
         this.canvas = null;
     }
@@ -304,6 +321,9 @@ class Pixal3DCameraUI {
                 this.draw();
             });
         });
+        this.container.addEventListener("wheel", (event) => {
+            event.stopPropagation();
+        }, { passive: true });
 
         this.canvas.addEventListener("pointerdown", (event) => {
             this.dragStart = {
@@ -331,10 +351,33 @@ class Pixal3DCameraUI {
         });
         this.canvas.addEventListener("wheel", (event) => {
             event.preventDefault();
+            event.stopPropagation();
             this.setValues({ distance: clamp(this.distance + Math.sign(event.deltaY) * 0.2, 0.1, 20) });
         }, { passive: false });
 
         this.node.addDOMWidget("camera_ui", "div", this.container, { serialize: false });
+        if ("ResizeObserver" in window) {
+            this.resizeObserver = new ResizeObserver(() => this.draw());
+            this.resizeObserver.observe(this.container);
+        }
+        window.requestAnimationFrame(() => this.draw());
+    }
+
+    syncLayout() {
+        if (!this.container || !this.canvas) return;
+        const nodeWidth = Math.max(280, Number(this.node?.size?.[0]) || DEFAULT_WIDTH);
+        const widgetWidth = Math.max(240, nodeWidth - 22);
+        this.container.style.setProperty("--pixal3d-camera-widget-width", `${widgetWidth}px`);
+
+        const panel = this.container.querySelector(".pixal3d-camera-panel") as HTMLElement | null;
+        const measuredWidth = this.canvas.offsetWidth || panel?.clientWidth || widgetWidth - 22;
+        const canvasWidth = Math.max(220, Math.floor(measuredWidth));
+        const canvasHeight = Math.max(180, Math.round(canvasWidth * CANVAS_ASPECT));
+        this.container.style.setProperty("--pixal3d-camera-canvas-height", `${canvasHeight}px`);
+        if (this.canvas.width !== canvasWidth || this.canvas.height !== canvasHeight) {
+            this.canvas.width = canvasWidth;
+            this.canvas.height = canvasHeight;
+        }
     }
 
     syncFromWidgets() {
@@ -618,6 +661,7 @@ class Pixal3DCameraUI {
 
     draw() {
         if (!this.canvas) return;
+        this.syncLayout();
         this.updateLinkedImage();
         const ctx = this.canvas.getContext("2d");
         if (!ctx) return;
@@ -652,6 +696,25 @@ app.registerExtension({
             }
         }
 
+        function heightForWidth(width) {
+            return Math.max(MIN_HEIGHT, Math.round(width * NODE_ASPECT));
+        }
+
+        function fitNodeSize(node) {
+            const currentWidth = Number(node.size?.[0]) || 0;
+            const currentHeight = Number(node.size?.[1]) || 0;
+            const nextWidth = Math.max(currentWidth || DEFAULT_WIDTH, MIN_WIDTH);
+            const wasOldForcedHeight = Math.abs(currentHeight - OLD_FORCED_HEIGHT) <= 1;
+            const nextHeight = wasOldForcedHeight
+                ? DEFAULT_HEIGHT
+                : Math.max(currentHeight || heightForWidth(nextWidth), MIN_HEIGHT);
+            node.min_size = [MIN_WIDTH, MIN_HEIGHT];
+            node.minSize = [MIN_WIDTH, MIN_HEIGHT];
+            if (nextWidth !== currentWidth || nextHeight !== currentHeight) {
+                node.setSize?.([nextWidth, nextHeight]);
+            }
+        }
+
         function ensureUI(node) {
             hideNativeWidgets(node);
             if (!node.pixal3dCameraUI) {
@@ -660,13 +723,14 @@ app.registerExtension({
                 node.pixal3dCameraUI.syncFromWidgets();
                 node.pixal3dCameraUI.draw();
             }
-            node.setSize?.([DEFAULT_WIDTH, DEFAULT_HEIGHT]);
+            fitNodeSize(node);
         }
 
         nodeType.prototype.onNodeCreated = function () {
             const result = onNodeCreated?.apply(this, arguments);
             this.serialize_widgets = true;
-            this.resizable = false;
+            this.resizable = true;
+            this.resizeable = true;
             ensureUI(this);
             return result;
         };
@@ -680,6 +744,18 @@ app.registerExtension({
         nodeType.prototype.onConnectionsChange = function () {
             const result = onConnectionsChange?.apply(this, arguments);
             this.pixal3dCameraUI?.updateLinkedImage();
+            this.pixal3dCameraUI?.draw();
+            return result;
+        };
+
+        const onResize = nodeType.prototype.onResize;
+        nodeType.prototype.onResize = function () {
+            const result = onResize?.apply(this, arguments);
+            const width = Math.max(MIN_WIDTH, Number(this.size?.[0]) || DEFAULT_WIDTH);
+            const height = heightForWidth(width);
+            if (Math.abs((Number(this.size?.[1]) || 0) - height) > 1) {
+                this.setSize?.([width, height]);
+            }
             this.pixal3dCameraUI?.draw();
             return result;
         };

@@ -188,6 +188,8 @@ Pixal3D Image To 3D background_mode=keep_alpha
 Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 ```
 
+如需检查背景处理后的输入图，可将 `Pixal3D Image To 3D rembg_image` 连接到 `Preview Image`。
+
 ## 常见问题
 
 | 问题 | 处理 |
