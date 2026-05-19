@@ -217,6 +217,18 @@ Connect `Pixal3D Image To 3D rembg_image` to `Preview Image` to inspect the imag
 
 Manual camera workflow:
 
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/e14fa7a7-e354-44a8-8221-c402bb74e844" width="350"/>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/e6bf6c7b-e236-4773-a465-db9a0078d33f" width="350"/>
+    </td>
+  </tr>
+</table>
+
+
 ```text
 Load Image -> Pixal3D Camera Control image
 Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
