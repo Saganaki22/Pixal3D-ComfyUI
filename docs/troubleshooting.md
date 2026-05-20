@@ -61,7 +61,7 @@ See [Windows wheel guide](windows_wheels.md).
 Use this when the model loads but VRAM is tight:
 
 ```text
-Pixal3D Model Loader vram_mode=native_low_vram
+Pixal3D Model Loader vram_mode=hybrid_low_vram
 Pixal3D Model Loader load_moge=false
 Pixal3D Model Loader load_rembg=false
 Pixal3D Model Loader naf_mode=fallback_if_missing
@@ -71,7 +71,7 @@ Pixal3D Image To 3D background_mode=keep_alpha
 Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 ```
 
-Use a transparent PNG/WebP so RMBG is not needed. `native_low_vram` trades VRAM for system RAM and speed. Plan for 20-40 GB RAM.
+Use a transparent PNG/WebP so RMBG is not needed. `hybrid_low_vram` combines Comfy/Aimdo-aware modules with native Pixal3D stage offload. If it behaves badly on a stack, fall back to `native_low_vram`. Plan for 20-40 GB RAM.
 
 ## Model Folder Problems
 

@@ -6,6 +6,7 @@ supporting camera-aware 3D-to-2D feature mapping.
 """
 
 from typing import *
+import gc
 import importlib.util
 import os
 import torch
@@ -19,6 +20,16 @@ from PIL import Image, ImageDraw
 import torch.distributed as dist
 from ....utils import dist_utils
 from ....utils.dist_utils import read_file_dist
+
+
+def _release_cuda_memory():
+    gc.collect()
+    if torch.cuda.is_available():
+        try:
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+        except Exception:
+            pass
 
 
 # =============================================================================
@@ -371,6 +382,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
         naf_target_size: Optional[List[int]] = None,
         naf_download_if_missing: bool = True,
         naf_fallback_mode: str = "strict",
+        naf_low_vram: bool = False,
     ):
         super().__init__()
         self.model_name = model_name
@@ -379,6 +391,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
         self.use_naf_upsample = use_naf_upsample
         self.naf_download_if_missing = naf_download_if_missing
         self.naf_fallback_mode = naf_fallback_mode
+        self.naf_low_vram = naf_low_vram
         self._naf_unavailable_reason = None
         if naf_target_size is None:
             self.naf_target_size = (128, 128)
@@ -435,6 +448,13 @@ class DinoV3ProjFeatureExtractor(nn.Module):
         if self.naf_model is not None:
             return True
         if self._naf_unavailable_reason is not None:
+            if self.naf_fallback_mode == "strict":
+                raise RuntimeError(
+                    "Pixal3D NAF is unavailable in strict mode. Use a smaller naf_target_size, "
+                    "install a lower-memory CUDA NATTEN/NAF stack, or set Pixal3D Model Loader "
+                    "naf_mode=fallback_if_missing. "
+                    f"Original error: {self._naf_unavailable_reason}"
+                )
             return False
         natten_ready = False
         if importlib.util.find_spec("natten") is not None:
@@ -620,9 +640,15 @@ class DinoV3ProjFeatureExtractor(nn.Module):
                     try:
                         # NAF expects: guide [B, 3, H, W], lr_features [B, C, h, w], target_size (H', W')
                         lr_features_bchw = z_patchtokens_spatial.permute(0, 3, 1, 2)  # [B, D, h, w]
+                        if self.naf_low_vram:
+                            self.model.cpu()
+                            _release_cuda_memory()
                         hr_features = self.naf_model(
                             image_for_naf, lr_features_bchw, self.naf_target_size
                         )  # [B, D, H', W']
+                        if self.naf_low_vram and self.naf_model is not None:
+                            self.naf_model.cpu()
+                            _release_cuda_memory()
 
                         # Sample from high-res feature map using same projection coordinates
                         z_proj_hr = self.proj_grid(

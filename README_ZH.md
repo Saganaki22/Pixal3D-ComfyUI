@@ -180,13 +180,15 @@ Windows 通用设置：
 最低显存/手动相机：
 
 ```text
-Pixal3D Model Loader vram_mode=native_low_vram
+Pixal3D Model Loader vram_mode=hybrid_low_vram
 Pixal3D Model Loader load_moge=false
 Pixal3D Model Loader load_rembg=false
 Pixal3D Image To 3D camera_mode=manual
 Pixal3D Image To 3D background_mode=keep_alpha
 Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 ```
+
+`hybrid_low_vram` 会保留 Pixal3D 分阶段 CPU/GPU offload，同时使用 Comfy/Aimdo-aware ops；如果某个环境不稳定，可退回 `native_low_vram`。
 
 如需检查背景处理后的输入图，可将 `Pixal3D Image To 3D rembg_image` 连接到 `Preview Image`。
 
@@ -197,6 +199,7 @@ Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 | `flash_attn` 缺失 | 安装匹配的 FlashAttention 2 或 3 轮子 |
 | `flex_gemm`、`cumesh`、`o_voxel`、`drtk` 缺失 | 安装匹配 Python/PyTorch/CUDA/Windows/GPU 的 Pixal3D CUDA 轮子 |
 | `natten.HAS_LIBNATTEN=False` | 使用 `naf_mode=fallback_if_missing`、`preload_naf=false`，或安装/构建 CUDA NATTEN |
+| strict NAF 在 12 GB 显存 OOM | 尝试 `vram_mode=hybrid_low_vram`，把 `naf_target_size` 降到 `256` 或 `128`，或使用 `naf_mode=fallback_if_missing` |
 | RMBG 下载失败 | 接受模型条款、登录并设置 `HF_TOKEN`，或用透明输入和 `keep_alpha` |
 | MoGe 缺失 | 下载 Comfy-Org/MoGe 到 `ComfyUI/models/geometry_estimation/`，或使用手动相机 |
 | GLB 碎裂 | 尝试 `remesh=true`，保持 `decimation_target=1000000` 或更高 |

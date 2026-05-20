@@ -184,14 +184,14 @@ Lowest-VRAM/manual path:
 
 | Node | Setting |
 |---|---|
-| Pixal3D Model Loader | `vram_mode=native_low_vram` |
+| Pixal3D Model Loader | `vram_mode=hybrid_low_vram`, or `native_low_vram` if hybrid has issues |
 | Pixal3D Model Loader | `load_moge=false` |
 | Pixal3D Model Loader | `load_rembg=false` |
 | Pixal3D Image To 3D | `camera_mode=manual` |
 | Pixal3D Image To 3D | `background_mode=keep_alpha` with transparent PNG/WebP |
 | Pixal3D Camera Control | Connect `manual_fov` to `Pixal3D Image To 3D.manual_fov` |
 
-`native_low_vram` moves Pixal3D stages between CPU and GPU as needed. It can reduce VRAM pressure, but it is slower and needs a lot of system RAM, often 20-40 GB.
+`hybrid_low_vram` keeps native stage-by-stage CPU/GPU offload, but builds modules with Comfy/Aimdo-aware ops. `native_low_vram` keeps the older pure native staging path. Both trade speed and system RAM for lower VRAM pressure.
 
 ## Nodes
 
@@ -242,6 +242,7 @@ Pixal3D Image To 3D camera_mode=manual
 | `No module named flash_attn` | Install a matching FlashAttention 2 wheel, or FlashAttention 3 with `flash_attn_interface` |
 | `flex_gemm`, `cumesh`, `o_voxel`, or `drtk` missing | Install matching Pixal3D CUDA wheels for your Python/PyTorch/CUDA/OS |
 | `natten.HAS_LIBNATTEN=False` | Use `naf_mode=fallback_if_missing`, `preload_naf=false`, or install/build CUDA NATTEN |
+| Strict NAF OOM on 12 GB | Try `vram_mode=hybrid_low_vram`, lower `naf_target_size` to `256` or `128`, or use `naf_mode=fallback_if_missing` |
 | RMBG download fails | Accept gated model terms, log in, set `HF_TOKEN`, or use transparent input with `keep_alpha` |
 | MoGe missing | Download Comfy-Org/MoGe files to `ComfyUI/models/geometry_estimation/` or use manual camera mode |
 | GLB looks fragmented | Try `remesh=true`; keep `decimation_target=1000000` or higher |

@@ -66,9 +66,11 @@ NATIVE_COMFY_MOGE_FILES = {
 }
 NATIVE_COMFY_MOGE_MODEL = "moge_2_vitl_normal_fp16.safetensors"
 ATTENTION_CHOICES = ["auto", "flash_attn_2", "flash_attn_3"]
-VRAM_MODE_CHOICES = ["dynamic_vram", "native_low_vram", "full_gpu"]
+VRAM_MODE_CHOICES = ["dynamic_vram", "hybrid_low_vram", "native_low_vram", "full_gpu"]
 NAF_MODE_CHOICES = ["fallback_if_missing", "strict"]
 NAF_TARGET_SIZE_CHOICES = ["upstream", "1024", "512", "256", "128"]
+COMFY_OPS_VRAM_MODES = {"dynamic_vram", "hybrid_low_vram"}
+LOW_VRAM_MODE_CHOICES = {"native_low_vram", "hybrid_low_vram"}
 REQUIRED_CUDA_MODULE_GROUPS = (
     ("flex_gemm", ("flex_gemm_ap", "flex_gemm")),
     ("cumesh", ("cumesh_vb", "cumesh")),
@@ -260,6 +262,18 @@ def _cuda_capability() -> tuple[int, int] | None:
 def _is_blackwell_gpu() -> bool:
     capability = _cuda_capability()
     return capability is not None and capability[0] >= 12
+
+
+def _uses_comfy_ops(vram_mode: str) -> bool:
+    return vram_mode in COMFY_OPS_VRAM_MODES
+
+
+def _uses_low_vram_staging(vram_mode: str) -> bool:
+    return vram_mode in LOW_VRAM_MODE_CHOICES
+
+
+def _uses_comfy_model_management(vram_mode: str) -> bool:
+    return vram_mode != "native_low_vram"
 
 
 def _release_cached_memory(aggressive: bool = False) -> None:
@@ -929,11 +943,13 @@ def build_image_cond_model(
     hf_endpoint: str = "",
     naf_mode: str = "fallback_if_missing",
     naf_target_size: str = "upstream",
+    naf_low_vram: bool = False,
 ):
     from pixal3d.trainers.flow_matching.mixins.image_conditioned_proj import DinoV3ProjFeatureExtractor
 
     model = DinoV3ProjFeatureExtractor(
-        **resolve_image_cond_config(config, download_if_missing, hf_endpoint, naf_mode, naf_target_size)
+        **resolve_image_cond_config(config, download_if_missing, hf_endpoint, naf_mode, naf_target_size),
+        naf_low_vram=bool(naf_low_vram),
     )
     model.eval()
     return model
@@ -1071,7 +1087,7 @@ class Pixal3DTorchWrapper(torch.nn.Module):
         if device is not None:
             self.active_device = device
             self.pipeline._device = device
-        if self.vram_mode == "native_low_vram":
+        if _uses_low_vram_staging(self.vram_mode):
             return self
         result = super().to(*args, **kwargs)
         if device is not None:
@@ -1081,7 +1097,7 @@ class Pixal3DTorchWrapper(torch.nn.Module):
 
     def activate_device(self, device: torch.device) -> None:
         self.active_device = torch.device(device)
-        if self.vram_mode == "native_low_vram":
+        if _uses_low_vram_staging(self.vram_mode):
             _offload_low_vram_pipeline_modules(self.pipeline)
             if self.moge_model is not None:
                 self.moge_model.cpu()
@@ -1153,7 +1169,7 @@ class Pixal3DHandle:
             raise RuntimeError("This Pixal3D model handle was unloaded. Run the Pixal3D Model Loader again.")
         prune_stale_loaded_models()
         wrapper = self.patcher.model
-        if self.vram_mode == "native_low_vram":
+        if not _uses_comfy_model_management(self.vram_mode):
             device = model_management.get_torch_device()
             if memory_required:
                 try:
@@ -1313,9 +1329,12 @@ def load_pixal3d_model(
     source_root = ensure_pixal3d_source(pixal3d_repo_path)
     configure_torch_hub_cache()
     ensure_cuda_aliases()
-    use_comfy_ops = vram_mode == "dynamic_vram"
+    use_comfy_ops = _uses_comfy_ops(vram_mode)
+    use_low_vram_staging = _uses_low_vram_staging(vram_mode)
     if use_comfy_ops:
         LOGGER.info("Building Pixal3D with Comfy/Aimdo-aware torch.nn ops for DynamicVRAM.")
+    if vram_mode == "hybrid_low_vram":
+        LOGGER.info("Using hybrid low-VRAM mode: Comfy/Aimdo-aware modules with native Pixal3D stage offload.")
 
     model_path = resolve_model_path(model_repo, download_if_missing, hf_endpoint)
     with _temporary_comfy_ops(use_comfy_ops):
@@ -1325,19 +1344,39 @@ def load_pixal3d_model(
         LOGGER.info("Loading Pixal3D pipeline from %s with %s", model_path, resolved_backend)
         pipeline_config = prepare_pipeline_config(model_path, download_if_missing, load_rembg, hf_endpoint)
         pipeline = Pixal3DImageTo3DPipeline.from_pretrained(model_path, config_file=pipeline_config)
-        pipeline.low_vram = vram_mode == "native_low_vram"
+        pipeline.low_vram = use_low_vram_staging
 
         pipeline.image_cond_model_ss = build_image_cond_model(
-            IMAGE_COND_CONFIGS["ss"], download_if_missing, hf_endpoint, naf_mode, naf_target_size
+            IMAGE_COND_CONFIGS["ss"],
+            download_if_missing,
+            hf_endpoint,
+            naf_mode,
+            naf_target_size,
+            use_low_vram_staging,
         )
         pipeline.image_cond_model_shape_512 = build_image_cond_model(
-            IMAGE_COND_CONFIGS["shape_512"], download_if_missing, hf_endpoint, naf_mode, naf_target_size
+            IMAGE_COND_CONFIGS["shape_512"],
+            download_if_missing,
+            hf_endpoint,
+            naf_mode,
+            naf_target_size,
+            use_low_vram_staging,
         )
         pipeline.image_cond_model_shape_1024 = build_image_cond_model(
-            IMAGE_COND_CONFIGS["shape_1024"], download_if_missing, hf_endpoint, naf_mode, naf_target_size
+            IMAGE_COND_CONFIGS["shape_1024"],
+            download_if_missing,
+            hf_endpoint,
+            naf_mode,
+            naf_target_size,
+            use_low_vram_staging,
         )
         pipeline.image_cond_model_tex_1024 = build_image_cond_model(
-            IMAGE_COND_CONFIGS["tex_1024"], download_if_missing, hf_endpoint, naf_mode, naf_target_size
+            IMAGE_COND_CONFIGS["tex_1024"],
+            download_if_missing,
+            hf_endpoint,
+            naf_mode,
+            naf_target_size,
+            use_low_vram_staging,
         )
 
     if preload_naf and naf_mode != "strict":
@@ -1479,7 +1518,7 @@ def run_pixal3d(
             rembg_used = not _pil_has_useful_alpha(image)
             _move_rembg_model(pipeline, device)
             image_preprocessed = pipeline.preprocess_image(image.convert("RGBA" if image.mode == "RGBA" else "RGB"))
-            if handle.vram_mode == "native_low_vram":
+            if _uses_low_vram_staging(handle.vram_mode):
                 _release_cached_memory()
         elif background_mode == "keep_alpha":
             if not _pil_has_useful_alpha(image):
@@ -1492,7 +1531,7 @@ def run_pixal3d(
                 rembg_used = True
                 _move_rembg_model(pipeline, device)
                 image_preprocessed = pipeline.preprocess_image(image.convert("RGBA" if image.mode == "RGBA" else "RGB"))
-                if handle.vram_mode == "native_low_vram":
+                if _uses_low_vram_staging(handle.vram_mode):
                     _release_cached_memory()
             else:
                 image_preprocessed = pipeline.preprocess_image(image.convert("RGBA"))
@@ -1510,7 +1549,7 @@ def run_pixal3d(
                 mesh_scale,
                 extend_pixel,
                 camera_resolution,
-                offload_after=handle.vram_mode == "native_low_vram",
+                offload_after=_uses_low_vram_staging(handle.vram_mode),
             )
         elif camera_mode == "manual":
             camera_params = {
