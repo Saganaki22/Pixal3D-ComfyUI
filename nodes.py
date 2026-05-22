@@ -59,7 +59,7 @@ TOOLTIPS = {
     "force_offload": "Unload the Pixal3D model from Comfy model management after generation.",
     "pixal3d_result": "Pixal3D result from Pixal3D Image To 3D. Contains the decoded mesh and texture attributes needed for GLB export.",
     "rembg_image": "Preview image after Pixal3D background preprocessing. Shows the RMBG-removed image when RMBG was used.",
-    "decimation_target": "Target face count for textured GLB export simplification. 1000000 matches the Pixal3D demo default; very low values can shred complex models.",
+    "decimation_target": "Target face count for textured GLB export simplification. 1000000 matches the Pixal3D demo default; very low values such as 5000 can lose detail.",
     "texture_size": "Baked texture size for GLB export. 4096 matches the Pixal3D demo default and preserves more material detail.",
     "remesh": "Use Pixal3D/o_voxel remesh path during GLB export. When enabled, the node passes it through to o_voxel; disable it if cleanup fragments the mesh.",
     "filename_prefix": "Prefix for the exported GLB in ComfyUI/output.",
@@ -420,7 +420,7 @@ class Pixal3DExportGLB:
         return {
             "required": {
                 "pixal3d_result": ("PIXAL3D_RESULT", {"tooltip": TOOLTIPS["pixal3d_result"]}),
-                "decimation_target": ("INT", {"default": 1000000, "min": 100000, "max": 5000000, "step": 10000, "tooltip": TOOLTIPS["decimation_target"]}),
+                "decimation_target": ("INT", {"default": 1000000, "min": 5000, "max": 5000000, "step": 5000, "tooltip": TOOLTIPS["decimation_target"]}),
                 "texture_size": ("INT", {"default": 4096, "min": 512, "max": 8192, "step": 512, "tooltip": TOOLTIPS["texture_size"]}),
                 "remesh": ("BOOLEAN", {"default": True, "tooltip": TOOLTIPS["remesh"]}),
                 "filename_prefix": ("STRING", {"default": "pixal3d", "tooltip": TOOLTIPS["filename_prefix"]}),

@@ -76,7 +76,7 @@ If `download_if_missing=true`, Pixal3D-ComfyUI downloads missing files from `htt
 
 Pixal3D-ComfyUI removes Hugging Face `.cache` metadata and `.git` folders after node downloads. Native MoGe files are placed directly in `ComfyUI/models/geometry_estimation/`; Pixal3D/DINO/RMBG helper folders should contain normal files like `.safetensors`, `.json`, and `.py`, not blob-only cache paths.
 
-Torch Hub helper code for Pixal3D's NAF upsampler is redirected to `ComfyUI/models/Pixal3D/torch_hub/`.
+Torch Hub helper code for Pixal3D's NAF upsampler is redirected to `ComfyUI/models/Pixal3D/torch_hub/`. If a user pre-downloaded `valeoai/NAF` before ComfyUI redirected Torch Hub, Pixal3D-ComfyUI also checks the normal user cache at `~/.cache/torch/hub`.
 
 ## NAF And NATTEN
 

@@ -121,16 +121,16 @@ def _temporary_comfy_ops(enabled: bool):
 
         ops = comfy.ops.manual_cast
         replacements = {
-            "Linear": ops.Linear,
-            "Conv1d": ops.Conv1d,
-            "Conv2d": ops.Conv2d,
-            "Conv3d": ops.Conv3d,
-            "BatchNorm2d": ops.BatchNorm2d,
-            "GroupNorm": ops.GroupNorm,
-            "LayerNorm": ops.LayerNorm,
-            "ConvTranspose1d": ops.ConvTranspose1d,
-            "ConvTranspose2d": ops.ConvTranspose2d,
-            "Embedding": ops.Embedding,
+            "Linear": getattr(ops, "Linear", torch.nn.Linear),
+            "Conv1d": getattr(ops, "Conv1d", torch.nn.Conv1d),
+            "Conv2d": getattr(ops, "Conv2d", torch.nn.Conv2d),
+            "Conv3d": getattr(ops, "Conv3d", torch.nn.Conv3d),
+            "BatchNorm2d": getattr(ops, "BatchNorm2d", torch.nn.BatchNorm2d),
+            "GroupNorm": getattr(ops, "GroupNorm", torch.nn.GroupNorm),
+            "LayerNorm": getattr(ops, "LayerNorm", torch.nn.LayerNorm),
+            "ConvTranspose1d": getattr(ops, "ConvTranspose1d", torch.nn.ConvTranspose1d),
+            "ConvTranspose2d": getattr(ops, "ConvTranspose2d", torch.nn.ConvTranspose2d),
+            "Embedding": getattr(ops, "Embedding", torch.nn.Embedding),
         }
         for name, replacement in replacements.items():
             if hasattr(torch.nn, name):
@@ -834,6 +834,20 @@ def _pil_has_useful_alpha(image: Image.Image) -> bool:
     return bool(np.any(alpha < 255))
 
 
+def _pad_to_square(image: Image.Image, bg_color: tuple[int, int, int] = (0, 0, 0)) -> Image.Image:
+    width, height = image.size
+    if width == height:
+        return image
+    size = max(width, height)
+    if image.mode == "RGBA":
+        canvas = Image.new("RGBA", (size, size), (*bg_color, 0))
+        canvas.paste(image, ((size - width) // 2, (size - height) // 2), image)
+        return canvas
+    canvas = Image.new("RGB", (size, size), bg_color)
+    canvas.paste(image.convert("RGB"), ((size - width) // 2, (size - height) // 2))
+    return canvas
+
+
 def configure_torch_hub_cache() -> None:
     hub_dir = pixal3d_models_dir() / "torch_hub"
     hub_dir.mkdir(parents=True, exist_ok=True)
@@ -1178,7 +1192,11 @@ class Pixal3DHandle:
                     LOGGER.debug("Could not pre-free ComfyUI memory for native Pixal3D low-VRAM run", exc_info=True)
             wrapper.activate_device(device)
             return wrapper
-        model_management.load_models_gpu([self.patcher], memory_required=memory_required)
+        model_management.load_models_gpu(
+            [self.patcher],
+            memory_required=memory_required,
+            force_full_load=(self.vram_mode == "full_gpu"),
+        )
         wrapper.activate_device(model_management.get_torch_device())
         return wrapper
 
@@ -1539,6 +1557,7 @@ def run_pixal3d(
             image_preprocessed = image.convert("RGB")
         else:
             raise ValueError(f"Unsupported background mode: {background_mode}")
+        image_preprocessed = _pad_to_square(image_preprocessed).convert("RGB")
         pbar.update_absolute(1, 5)
 
         if camera_mode == "moge":

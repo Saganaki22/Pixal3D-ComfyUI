@@ -192,6 +192,18 @@ Pixal3D Camera Control manual_fov -> Pixal3D Image To 3D manual_fov
 
 如需检查背景处理后的输入图，可将 `Pixal3D Image To 3D rembg_image` 连接到 `Preview Image`。
 
+非 1:1 输入会自动 padding 成正方形，再进入 Pixal3D 的正方形 image encoder，所以 9:16 或 16:9 不会被拉伸。padding 发生在背景处理之后：
+
+```text
+auto_remove: 输入 -> RMBG/alpha 裁剪 -> padding 成正方形 -> RGB 图像送入 Pixal3D
+keep_alpha: 透明输入 -> alpha 裁剪 -> padding 成正方形 -> RGB 图像送入 Pixal3D
+none: 输入 -> 转成 RGB -> padding 成正方形 -> RGB 图像送入 Pixal3D
+```
+
+如果输入是透明图，并且不想使用 RMBG，请用 `background_mode=keep_alpha`。`background_mode=none` 会按设计忽略 alpha。
+
+如果需要低面数导出，可以降低 **Pixal3D Export GLB** 的 `decimation_target`。默认是 `1000000`；现在可以设置到 `5000` 左右，但复杂模型会丢细节。
+
 ## 常见问题
 
 | 问题 | 处理 |

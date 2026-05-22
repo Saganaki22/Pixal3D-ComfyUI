@@ -32,6 +32,38 @@ def _release_cuda_memory():
             pass
 
 
+def _dino_layers(model: nn.Module):
+    layers = getattr(model, "layer", None)
+    if layers is not None:
+        return layers
+    encoder = getattr(model, "model", None)
+    layers = getattr(encoder, "layer", None)
+    if layers is not None:
+        return layers
+    raise AttributeError("DINOv3 encoder layers were not found on .layer or .model.layer")
+
+
+def _module_has_tensor_off_device(module: nn.Module, device: torch.device) -> bool:
+    for tensor in list(module.parameters(recurse=True)) + list(module.buffers(recurse=True)):
+        if tensor is not None and tensor.device != device:
+            return True
+    return False
+
+
+def _resize_square_preserve_aspect(image: Image.Image, size: int, bg_color: tuple = (0, 0, 0)) -> Image.Image:
+    width, height = image.size
+    if width == height:
+        return image.resize((size, size), Image.LANCZOS)
+    square = max(width, height)
+    if image.mode == "RGBA":
+        canvas = Image.new("RGBA", (square, square), (*bg_color, 0))
+        canvas.paste(image, ((square - width) // 2, (square - height) // 2), image)
+    else:
+        canvas = Image.new("RGB", (square, square), bg_color)
+        canvas.paste(image.convert("RGB"), ((square - width) // 2, (square - height) // 2))
+    return canvas.resize((size, size), Image.LANCZOS)
+
+
 # =============================================================================
 # Projection Utilities
 # =============================================================================
@@ -434,13 +466,21 @@ class DinoV3ProjFeatureExtractor(nn.Module):
     def _cached_naf_repo(self) -> Optional[str]:
         import torch.hub
 
-        hub_dir = torch.hub.get_dir()
-        if not os.path.isdir(hub_dir):
-            return None
-        for name in os.listdir(hub_dir):
-            repo_dir = os.path.join(hub_dir, name)
-            if name.startswith("valeoai_NAF_") and os.path.exists(os.path.join(repo_dir, "hubconf.py")):
-                return repo_dir
+        search_dirs = []
+        for hub_dir in (
+            torch.hub.get_dir(),
+            os.path.join(os.path.expanduser("~"), ".cache", "torch", "hub"),
+        ):
+            if hub_dir and hub_dir not in search_dirs:
+                search_dirs.append(hub_dir)
+
+        for hub_dir in search_dirs:
+            if not os.path.isdir(hub_dir):
+                continue
+            for name in os.listdir(hub_dir):
+                repo_dir = os.path.join(hub_dir, name)
+                if name.startswith("valeoai_NAF_") and os.path.exists(os.path.join(repo_dir, "hubconf.py")):
+                    return repo_dir
         return None
 
     def _load_naf(self):
@@ -530,14 +570,19 @@ class DinoV3ProjFeatureExtractor(nn.Module):
         if self.naf_model is not None:
             self.naf_model.cpu()
         return self
+
+    def _ensure_dino_device(self, device: torch.device) -> None:
+        if _module_has_tensor_off_device(self.model, device):
+            self.model.to(device)
     
     def extract_features(self, image: torch.Tensor) -> torch.Tensor:
         """Extract features using DINOv3."""
-        image = image.to(self.model.embeddings.patch_embeddings.weight.dtype)
+        self._ensure_dino_device(image.device)
+        image = image.to(device=image.device, dtype=self.model.embeddings.patch_embeddings.weight.dtype)
         hidden_states = self.model.embeddings(image, bool_masked_pos=None)
         position_embeddings = self.model.rope_embeddings(image)
 
-        for layer_module in self.model.layer:
+        for layer_module in _dino_layers(self.model):
             hidden_states = layer_module(
                 hidden_states,
                 position_embeddings=position_embeddings,
@@ -574,7 +619,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
             assert image.ndim == 4, "Image tensor should be batched (B, C, H, W)"
         elif isinstance(image, list):
             assert all(isinstance(i, Image.Image) for i in image), "Image list should be list of PIL images"
-            image = [i.resize((self.image_size, self.image_size), Image.LANCZOS) for i in image]
+            image = [_resize_square_preserve_aspect(i, self.image_size) for i in image]
             image = [np.array(i.convert('RGB')).astype(np.float32) / 255 for i in image]
             image = [torch.from_numpy(i).permute(2, 0, 1).float() for i in image]
             image = torch.stack(image)

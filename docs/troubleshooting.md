@@ -103,6 +103,16 @@ If `download_if_missing=true`, the node downloads into these folders. If it is `
 
 MoGe estimates camera/FOV only. It does not improve mesh detail or texture quality.
 
+Non-square images are padded to square before Pixal3D's image encoder so the subject is not stretched. Padding is automatic and happens after background handling:
+
+```text
+auto_remove: input -> RMBG/alpha crop -> pad to square -> RGB image sent to Pixal3D
+keep_alpha: transparent input -> alpha crop -> pad to square -> RGB image sent to Pixal3D
+none: input -> convert to RGB -> pad to square -> RGB image sent to Pixal3D
+```
+
+For transparent images without RMBG, use `background_mode=keep_alpha`. `background_mode=none` ignores alpha by design.
+
 If framing looks wrong, try manual camera mode:
 
 ```text
@@ -122,6 +132,8 @@ Use these defaults first:
 Pixal3D Export GLB decimation_target=1000000
 Pixal3D Export GLB texture_size=4096
 ```
+
+For lower-poly exports, reduce `decimation_target`. Values around `5000` are allowed, but expect visible detail loss on complex geometry.
 
 If the exported mesh looks fragmented, set:
 

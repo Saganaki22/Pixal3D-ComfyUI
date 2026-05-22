@@ -215,6 +215,18 @@ Pixal3D Export GLB glb_path -> Preview 3D & Animation model_file
 
 Connect `Pixal3D Image To 3D rembg_image` to `Preview Image` to inspect the image Pixal3D used after background preprocessing.
 
+Non-square inputs are padded to square automatically before Pixal3D's square image encoder, so 9:16 or 16:9 images are not stretched. Padding happens after background handling:
+
+```text
+auto_remove: input -> RMBG/alpha crop -> pad to square -> RGB image sent to Pixal3D
+keep_alpha: transparent input -> alpha crop -> pad to square -> RGB image sent to Pixal3D
+none: input -> convert to RGB -> pad to square -> RGB image sent to Pixal3D
+```
+
+If the input is transparent and you do not want RMBG, use `background_mode=keep_alpha`. `background_mode=none` ignores alpha by design.
+
+For lower-poly exports, reduce **Pixal3D Export GLB** `decimation_target`. The default is `1000000`; values around `5000` are allowed but can lose detail on complex geometry.
+
 Manual camera workflow:
 
 <table>

@@ -7,6 +7,31 @@ import numpy as np
 from PIL import Image
 
 
+def _dino_layers(model):
+    layers = getattr(model, "layer", None)
+    if layers is not None:
+        return layers
+    encoder = getattr(model, "model", None)
+    layers = getattr(encoder, "layer", None)
+    if layers is not None:
+        return layers
+    raise AttributeError("DINOv3 encoder layers were not found on .layer or .model.layer")
+
+
+def _resize_square_preserve_aspect(image: Image.Image, size: int, bg_color: tuple = (0, 0, 0)) -> Image.Image:
+    width, height = image.size
+    if width == height:
+        return image.resize((size, size), Image.LANCZOS)
+    square = max(width, height)
+    if image.mode == "RGBA":
+        canvas = Image.new("RGBA", (square, square), (*bg_color, 0))
+        canvas.paste(image, ((square - width) // 2, (square - height) // 2), image)
+    else:
+        canvas = Image.new("RGB", (square, square), bg_color)
+        canvas.paste(image.convert("RGB"), ((square - width) // 2, (square - height) // 2))
+    return canvas.resize((size, size), Image.LANCZOS)
+
+
 class DinoV2FeatureExtractor:
     """
     Feature extractor for DINOv2 models.
@@ -83,7 +108,7 @@ class DinoV3FeatureExtractor:
         hidden_states = self.model.embeddings(image, bool_masked_pos=None)
         position_embeddings = self.model.rope_embeddings(image)
 
-        for i, layer_module in enumerate(self.model.layer):
+        for i, layer_module in enumerate(_dino_layers(self.model)):
             hidden_states = layer_module(
                 hidden_states,
                 position_embeddings=position_embeddings,
@@ -106,7 +131,7 @@ class DinoV3FeatureExtractor:
             assert image.ndim == 4, "Image tensor should be batched (B, C, H, W)"
         elif isinstance(image, list):
             assert all(isinstance(i, Image.Image) for i in image), "Image list should be list of PIL images"
-            image = [i.resize((self.image_size, self.image_size), Image.LANCZOS) for i in image]
+            image = [_resize_square_preserve_aspect(i, self.image_size) for i in image]
             image = [np.array(i.convert('RGB')).astype(np.float32) / 255 for i in image]
             image = [torch.from_numpy(i).permute(2, 0, 1).float() for i in image]
             image = torch.stack(image).cuda()
