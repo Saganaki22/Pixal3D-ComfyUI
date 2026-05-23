@@ -21,6 +21,8 @@ import torch.distributed as dist
 from ....utils import dist_utils
 from ....utils.dist_utils import read_file_dist
 
+_SHARED_NAF_MODEL: Optional[nn.Module] = None
+
 
 def _release_cuda_memory():
     gc.collect()
@@ -415,6 +417,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
         naf_download_if_missing: bool = True,
         naf_fallback_mode: str = "strict",
         naf_low_vram: bool = False,
+        shared_dino_model: Optional[nn.Module] = None,
     ):
         super().__init__()
         self.model_name = model_name
@@ -433,7 +436,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
             self.naf_target_size = tuple(naf_target_size)
         
         # Load DINOv3 model (frozen, no trainable params in this module)
-        self.model = DINOv3ViTModel.from_pretrained(model_name)
+        self.model = shared_dino_model if shared_dino_model is not None else DINOv3ViTModel.from_pretrained(model_name)
         self.model.eval()
         self.model.requires_grad_(False)
         
@@ -485,6 +488,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
 
     def _load_naf(self):
         """Lazy-load pretrained NAF model."""
+        global _SHARED_NAF_MODEL
         if self.naf_model is not None:
             return True
         if self._naf_unavailable_reason is not None:
@@ -516,6 +520,14 @@ class DinoV3ProjFeatureExtractor(nn.Module):
                 )
             print(f"[Pixal3D] NAF unavailable ({self._naf_unavailable_reason}); using {self.naf_fallback_mode} fallback.")
             return False
+        if _SHARED_NAF_MODEL is not None:
+            try:
+                device = next(self.model.parameters()).device
+                _SHARED_NAF_MODEL.to(device)
+            except Exception:
+                pass
+            self.naf_model = _SHARED_NAF_MODEL
+            return True
         if self.naf_model is None:
             import torch.hub
             try:
@@ -533,6 +545,7 @@ class DinoV3ProjFeatureExtractor(nn.Module):
                     raise FileNotFoundError("valeoai/NAF is not cached and NAF downloads are disabled")
                 self.naf_model.eval()
                 self.naf_model.requires_grad_(False)
+                _SHARED_NAF_MODEL = self.naf_model
             except Exception as exc:
                 self.naf_model = None
                 self._naf_unavailable_reason = f"{type(exc).__name__}: {exc}"

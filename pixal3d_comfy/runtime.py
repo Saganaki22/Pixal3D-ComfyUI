@@ -958,15 +958,34 @@ def build_image_cond_model(
     naf_mode: str = "fallback_if_missing",
     naf_target_size: str = "upstream",
     naf_low_vram: bool = False,
+    shared_dino_models: dict[str, torch.nn.Module] | None = None,
 ):
     from pixal3d.trainers.flow_matching.mixins.image_conditioned_proj import DinoV3ProjFeatureExtractor
 
+    resolved_config = resolve_image_cond_config(config, download_if_missing, hf_endpoint, naf_mode, naf_target_size)
+    dino_key = str(resolved_config.get("model_name", DEFAULT_DINO_REPO))
+    shared_dino_model = shared_dino_models.get(dino_key) if shared_dino_models is not None else None
+    if shared_dino_model is not None:
+        resolved_config["shared_dino_model"] = shared_dino_model
     model = DinoV3ProjFeatureExtractor(
-        **resolve_image_cond_config(config, download_if_missing, hf_endpoint, naf_mode, naf_target_size),
+        **resolved_config,
         naf_low_vram=bool(naf_low_vram),
     )
+    if shared_dino_models is not None and dino_key not in shared_dino_models:
+        dino_model = getattr(model, "model", None)
+        if isinstance(dino_model, torch.nn.Module):
+            shared_dino_models[dino_key] = dino_model
     model.eval()
     return model
+
+
+def clear_image_conditioning_shared_caches() -> None:
+    try:
+        from pixal3d.trainers.flow_matching.mixins import image_conditioned_proj
+
+        setattr(image_conditioned_proj, "_SHARED_NAF_MODEL", None)
+    except Exception:
+        LOGGER.debug("Could not clear Pixal3D shared image-conditioning cache", exc_info=True)
 
 
 def load_moge_model(
@@ -1156,6 +1175,7 @@ class Pixal3DTorchWrapper(torch.nn.Module):
             except Exception:
                 pass
 
+        clear_image_conditioning_shared_caches()
         try:
             self.dynamic_vbars.clear()
         except Exception:
@@ -1363,6 +1383,7 @@ def load_pixal3d_model(
         pipeline_config = prepare_pipeline_config(model_path, download_if_missing, load_rembg, hf_endpoint)
         pipeline = Pixal3DImageTo3DPipeline.from_pretrained(model_path, config_file=pipeline_config)
         pipeline.low_vram = use_low_vram_staging
+        shared_dino_models: dict[str, torch.nn.Module] = {}
 
         pipeline.image_cond_model_ss = build_image_cond_model(
             IMAGE_COND_CONFIGS["ss"],
@@ -1371,6 +1392,7 @@ def load_pixal3d_model(
             naf_mode,
             naf_target_size,
             use_low_vram_staging,
+            shared_dino_models,
         )
         pipeline.image_cond_model_shape_512 = build_image_cond_model(
             IMAGE_COND_CONFIGS["shape_512"],
@@ -1379,6 +1401,7 @@ def load_pixal3d_model(
             naf_mode,
             naf_target_size,
             use_low_vram_staging,
+            shared_dino_models,
         )
         pipeline.image_cond_model_shape_1024 = build_image_cond_model(
             IMAGE_COND_CONFIGS["shape_1024"],
@@ -1387,6 +1410,7 @@ def load_pixal3d_model(
             naf_mode,
             naf_target_size,
             use_low_vram_staging,
+            shared_dino_models,
         )
         pipeline.image_cond_model_tex_1024 = build_image_cond_model(
             IMAGE_COND_CONFIGS["tex_1024"],
@@ -1395,6 +1419,7 @@ def load_pixal3d_model(
             naf_mode,
             naf_target_size,
             use_low_vram_staging,
+            shared_dino_models,
         )
 
     if preload_naf and naf_mode != "strict":
