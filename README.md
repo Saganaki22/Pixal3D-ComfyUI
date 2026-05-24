@@ -121,6 +121,7 @@ Known community Windows NATTEN wheels:
 
 | Python | PyTorch | CUDA | GPU | Wheel |
 |---|---|---|---|---|
+| 3.12.10 / 3.13.12 | 2.10 | 13.0 | Ampere sm86, RTX 3050-3090 Ti | [NeilsMabet/Natten-0.21.6-Amphere-wheel-windows](https://github.com/NeilsMabet/Natten-0.21.6-Amphere-wheel-windows) |
 | 3.12 | 2.10 | 13.0 | Blackwell sm120 | [drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64](https://huggingface.co/drbaph/NATTEN-0.21.6-torch2100cu130-cp312-cp312-win_amd64) |
 | 3.12 | 2.8+ | 12.8 | Blackwell sm100/sm120 | [naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64](https://huggingface.co/naxneri/natten-0.21.6-blackwell-cu128-cp312-cp312-win_amd64) |
 
