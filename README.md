@@ -60,6 +60,8 @@ On Windows, install wheels in this order:
 
 The required Pixal3D CUDA wheels are separate from NATTEN. A working NATTEN install does not mean `flex_gemm`, `cumesh`, `o_voxel`, or `drtk` are installed.
 
+Browse available prebuilt Windows CUDA wheels: [PozzettiAndrea CUDA Wheels](https://pozzettiandrea.github.io/cuda-wheels/). Choose wheels that exactly match your Python, PyTorch, and CUDA versions.
+
 For Python 3.12, PyTorch 2.10, CUDA 13.0 on Blackwell sm120, install the required Pixal3D CUDA wheels plus the prebuilt NATTEN/libnatten wheel with:
 
 ```bat

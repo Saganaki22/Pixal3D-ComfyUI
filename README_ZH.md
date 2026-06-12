@@ -60,6 +60,8 @@ Windows 上建议按这个顺序处理：
 
 Pixal3D CUDA 轮子和 NATTEN 是两件事。NATTEN 装好了不代表 `flex_gemm`、`cumesh`、`o_voxel`、`drtk` 已经装好。
 
+可在 [PozzettiAndrea CUDA Wheels](https://pozzettiandrea.github.io/cuda-wheels/) 查找预编译 Windows CUDA 轮子。请选择与 Python、PyTorch 和 CUDA 版本完全匹配的轮子。
+
 Python 3.12、PyTorch 2.10、CUDA 13.0、Blackwell sm120 示例，包含 Pixal3D 必需 CUDA 轮子和预编译 NATTEN/libnatten 轮子：
 
 ```bat
