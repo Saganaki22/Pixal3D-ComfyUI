@@ -62,7 +62,7 @@ TOOLTIPS = {
     "decimation_target": "Target face count for textured GLB export simplification. 1000000 matches the Pixal3D demo default; very low values such as 5000 can lose detail.",
     "texture_size": "Baked texture size for GLB export. 4096 matches the Pixal3D demo default and preserves more material detail.",
     "remesh": "Use Pixal3D/o_voxel remesh path during GLB export. When enabled, the node passes it through to o_voxel; disable it if cleanup fragments the mesh.",
-    "filename_prefix": "Prefix for the exported GLB in ComfyUI/output.",
+    "filename_prefix": "Prefix for the exported GLB in ComfyUI/output. Use subfolder/name to organize exports into subfolders.",
     "unload_model": "Pixal3D model handle to remove from VRAM and the Pixal3D Python cache. Use this to free CPU RAM after experiments.",
 }
 

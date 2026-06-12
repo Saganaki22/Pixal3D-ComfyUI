@@ -1703,10 +1703,31 @@ def export_glb(
     glb.apply_transform(rot)
 
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    safe_prefix = re.sub(r"[^0-9a-zA-Z_.-]+", "_", filename_prefix).strip("._") or "pixal3d"
-    output_dir = Path(folder_paths.get_output_directory())
+    raw_prefix = str(filename_prefix or "").strip().replace("\\", "/")
+    if raw_prefix.startswith("/") or re.match(r"^[a-zA-Z]:", raw_prefix):
+        raise ValueError("filename_prefix must be relative to the ComfyUI output directory.")
+
+    raw_parts = [part.strip() for part in raw_prefix.split("/") if part.strip()]
+    if any(part in {".", ".."} for part in raw_parts):
+        raise ValueError("filename_prefix cannot contain '.' or '..' path components.")
+
+    safe_parts = [
+        re.sub(r"[^0-9a-zA-Z_.-]+", "_", part).strip("._")
+        for part in raw_parts
+    ]
+    safe_parts = [part for part in safe_parts if part]
+    if not safe_parts:
+        safe_parts = ["pixal3d"]
+
+    output_dir = Path(folder_paths.get_output_directory()).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"{safe_prefix}_{timestamp}.glb"
+    output_path = output_dir.joinpath(*safe_parts[:-1], f"{safe_parts[-1]}_{timestamp}.glb").resolve()
+    try:
+        output_path.relative_to(output_dir)
+    except ValueError as exc:
+        raise ValueError("filename_prefix must stay inside the ComfyUI output directory.") from exc
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     glb.export(str(output_path), extension_webp=False)
     gc.collect()
     model_management.soft_empty_cache()
