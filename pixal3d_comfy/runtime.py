@@ -303,8 +303,10 @@ def _sanitize_module_name(name: str) -> str:
 
 def environment_report() -> str:
     lines = ["Pixal3D-ComfyUI environment check", ""]
-    lines.append(f"ComfyUI models/Pixal3D: {pixal3d_models_dir()}")
-    lines.append(f"ComfyUI models/geometry_estimation: {moge_models_dir()}")
+    lines.append("ComfyUI models/Pixal3D search paths:")
+    lines.extend(f"- {path}" for path in pixal3d_model_dirs())
+    lines.append("ComfyUI models/geometry_estimation search paths:")
+    lines.extend(f"- {path}" for path in moge_model_dirs())
     lines.append(f"Nodepack path: {_repo_root()}")
     lines.append("")
 
@@ -378,23 +380,69 @@ def environment_report() -> str:
     return "\n".join(lines)
 
 
-def pixal3d_models_dir() -> Path:
-    models_dir = Path(folder_paths.models_dir) / "Pixal3D"
-    models_dir.mkdir(parents=True, exist_ok=True)
+def _get_folder_paths(folder_name: str) -> list[Path]:
     try:
-        folder_paths.add_model_folder_path("Pixal3D", str(models_dir))
+        return [Path(path) for path in folder_paths.get_folder_paths(folder_name)]
     except Exception:
-        pass
+        return []
+
+
+def _unique_paths(paths: list[Path]) -> list[Path]:
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        key = os.path.normcase(os.path.abspath(str(path)))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(path)
+    return unique
+
+
+def pixal3d_model_dirs() -> list[Path]:
+    paths = _get_folder_paths("Pixal3D")
+    if paths:
+        return _unique_paths(paths)
+    # Pixal3D is not a built-in ComfyUI model folder type, so installations
+    # that use the default ComfyUI/models tree will not have it registered by
+    # core. Keep supporting the documented default location without guessing
+    # external/shared model roots.
+    return [Path(folder_paths.models_dir) / "Pixal3D"]
+
+
+def pixal3d_models_dir() -> Path:
+    paths = pixal3d_model_dirs()
+    if not paths:
+        raise FileNotFoundError(
+            "Pixal3D model path is not configured. Place models under the default ComfyUI/models/Pixal3D folder, "
+            "or add a Pixal3D entry to your ComfyUI extra_model_paths_config, for example:\n"
+            "comfyui:\n"
+            "  base_path: /path/to/ComfyUI-or-shared-root\n"
+            "  Pixal3D: models/Pixal3D"
+        )
+    models_dir = paths[0]
+    models_dir.mkdir(parents=True, exist_ok=True)
     return models_dir
 
 
+def moge_model_dirs() -> list[Path]:
+    geometry_dirs = _get_folder_paths(NATIVE_COMFY_MOGE_SUBDIR)
+    legacy_moge_dirs = _get_folder_paths("moge")
+    return _unique_paths([*geometry_dirs, *legacy_moge_dirs])
+
+
 def moge_models_dir() -> Path:
-    models_dir = Path(folder_paths.models_dir) / NATIVE_COMFY_MOGE_SUBDIR
+    paths = moge_model_dirs()
+    if not paths:
+        raise FileNotFoundError(
+            "Native ComfyUI MoGe path is not configured. Add a geometry_estimation entry to your ComfyUI "
+            "extra_model_paths_config, for example:\n"
+            "comfyui:\n"
+            "  base_path: /path/to/ComfyUI-or-shared-root\n"
+            "  geometry_estimation: models/geometry_estimation"
+        )
+    models_dir = paths[0]
     models_dir.mkdir(parents=True, exist_ok=True)
-    try:
-        folder_paths.add_model_folder_path("moge", str(models_dir))
-    except Exception:
-        pass
     return models_dir
 
 
@@ -443,7 +491,6 @@ def _snapshot_subdirs(cache_dir: Path) -> list[Path]:
 
 
 def _candidate_snapshot_dirs(repo_id: str) -> list[Path]:
-    root = pixal3d_models_dir()
     candidates: list[Path] = []
     for name in dict.fromkeys(
         [
@@ -452,9 +499,10 @@ def _candidate_snapshot_dirs(repo_id: str) -> list[Path]:
             _repo_cache_folder_name(repo_id),
         ]
     ):
-        candidate = root / name
-        candidates.append(candidate)
-        candidates.extend(_snapshot_subdirs(candidate))
+        for root in pixal3d_model_dirs():
+            candidate = root / name
+            candidates.append(candidate)
+            candidates.extend(_snapshot_subdirs(candidate))
     return candidates
 
 
@@ -546,15 +594,21 @@ def _download_hf_file_to_path(repo_id: str, remote_filename: str, destination: P
 
 def _remove_snapshot_metadata(target: Path) -> None:
     target = target.resolve()
-    root = pixal3d_models_dir().resolve()
-    try:
-        target.relative_to(root)
-    except ValueError:
+    roots = [root.resolve() for root in pixal3d_model_dirs()]
+    if not any(_is_relative_to(target, root) for root in roots):
         return
     for name in (".cache", ".git"):
         metadata_dir = target / name
         if metadata_dir.exists() and metadata_dir.is_dir():
             shutil.rmtree(metadata_dir, ignore_errors=True)
+
+
+def _is_relative_to(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
 
 
 def resolve_model_path(model_repo: str, download_if_missing: bool, hf_endpoint: str = "") -> str:
@@ -646,7 +700,6 @@ def resolve_native_comfy_moge_path(
         repo_id = NATIVE_COMFY_MOGE_REPO
 
     target_dir = moge_models_dir()
-    legacy_dir = Path(folder_paths.models_dir) / "moge"
 
     if download_if_missing:
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -656,12 +709,16 @@ def resolve_native_comfy_moge_path(
                 LOGGER.info("Downloading native ComfyUI MoGe file %s from %s to %s", remote_filename, repo_id, destination)
                 _download_hf_file_to_path(repo_id, remote_filename, destination, hf_endpoint)
 
-    for search_dir in (target_dir, legacy_dir):
+    for search_dir in moge_model_dirs():
         required_path = search_dir / NATIVE_COMFY_MOGE_MODEL
         if required_path.exists() and required_path.is_file():
             return str(required_path)
 
-    expected = "\n".join(str(target_dir / filename) for filename in NATIVE_COMFY_MOGE_FILES)
+    expected = "\n".join(
+        str(search_dir / filename)
+        for search_dir in moge_model_dirs()
+        for filename in NATIVE_COMFY_MOGE_FILES
+    )
     raise FileNotFoundError(
         "Native ComfyUI MoGe is missing.\n"
         f"Download link: https://huggingface.co/{NATIVE_COMFY_MOGE_REPO}\n"

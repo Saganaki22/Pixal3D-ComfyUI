@@ -47,6 +47,19 @@ python install.py --check
 | RMBG-2.0 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | gated model；只在 `background_mode=auto_remove` 时需要 |
 | NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | 只在 strict NAF 时需要 |
 
+### 使用 `extra_model_paths_config` 时的模型搜索路径
+
+Pixal3D-ComfyUI 支持默认的 `ComfyUI/models/Pixal3D` 目录。如果你通过 `--extra-model-paths-config` 把模型放在默认 `ComfyUI/models` 之外，请在配置里显式添加 Pixal3D 相关条目：
+
+```yaml
+comfyui:
+  base_path: /path/to/shared/root
+  Pixal3D: models/Pixal3D
+  geometry_estimation: models/geometry_estimation
+```
+
+不要依赖 Pixal3D-ComfyUI 从其他模型目录猜测模型根目录。Pixal3D loader 会搜索已注册的 `Pixal3D` 目录；如果没有自定义 `Pixal3D` 注册目录，则使用默认的 `ComfyUI/models/Pixal3D`。原生 MoGe 会搜索已注册的 `geometry_estimation` 目录。
+
 手动安装 CUDA 轮子时使用 `--no-deps`，避免 pip 替换已经可用的 Torch。
 
 ## Windows 轮子顺序

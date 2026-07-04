@@ -47,6 +47,19 @@ A working generation environment needs these imports inside the same Python that
 | RMBG-2.0 | `ComfyUI/models/Pixal3D/briaai_RMBG-2.0/` | Gated model; only needed for `background_mode=auto_remove` |
 | NATTEN/libnatten | `natten.HAS_LIBNATTEN == True` | Only needed for strict NAF |
 
+### Model search paths with `extra_model_paths_config`
+
+Pixal3D-ComfyUI supports the default `ComfyUI/models/Pixal3D` folder. If you keep models outside the default `ComfyUI/models` folder through `--extra-model-paths-config`, add explicit Pixal3D entries to that config:
+
+```yaml
+comfyui:
+  base_path: /path/to/shared/root
+  Pixal3D: models/Pixal3D
+  geometry_estimation: models/geometry_estimation
+```
+
+Do not rely on Pixal3D-ComfyUI guessing a model root from unrelated model folders. The Pixal3D loader searches the registered `Pixal3D` folder, or the default `ComfyUI/models/Pixal3D` folder when no custom `Pixal3D` folder is registered. Native MoGe searches the registered `geometry_estimation` folder.
+
 If Environment Check says a CUDA package is missing, install a wheel that exactly matches your stack. Do not let pip replace a working Torch install while testing random wheels; use `--no-deps` for manual CUDA wheels.
 
 ## Windows Wheel Order
